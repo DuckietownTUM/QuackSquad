@@ -22,23 +22,30 @@ class PilotNode(DTROS):
     def turnLeft(self):
         message = WheelsCmdStamped(vel_left=1.0, vel_right=1.0)
         self._publisher.publish(message)
-        rospy.sleep(1)
+        rospy.sleep(2)
 
     def turnRight(self):
         message = WheelsCmdStamped(vel_left=1.0, vel_right=1.0)
         self._publisher.publish(message)
-        rospy.sleep(1)
+        rospy.sleep(2)
+
+    def stay(self):
+        stop = WheelsCmdStamped(vel_left=0.0, vel_right=0.0)
+        self._publisher.publish(stop)
+        rospy.sleep(2)
 
     def run(self):
-        self.goStraight()
-        self.on_shutdown()
-        self.goStraight()
-        self.on_shutdown()
+        while not rospy.is_shutdown():
+            self.goStraight()
+            self.stay()
+            self.goStraight()
+            self.stay()
+
+            rospy.sleep(10)
 
     def on_shutdown(self):
         stop = WheelsCmdStamped(vel_left=0.0, vel_right=0.0)
         self._publisher.publish(stop)
-        rospy.sleep(1) # delete this
 
 
 if __name__ == '__main__':
