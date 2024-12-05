@@ -15,6 +15,8 @@ class PilotNode(DTROS):
         topic = f"/{vehicle_name}/wheels_driver_node/wheels_cmd"
         self._publisher = rospy.Publisher(topic, WheelsCmdStamped, queue_size=1)
 
+        self.trim = rospy.get_param(f"/{vehicle_name}/kinematics_node/trim")
+
     def goStraight(self):
         message = WheelsCmdStamped(vel_left=1.0, vel_right=1.0)
         self._publisher.publish(message)
@@ -49,7 +51,9 @@ class PilotNode(DTROS):
             return self.getLeftWheelVelocity(x)
 
     def turnRight(self, x):
-        message = WheelsCmdStamped(vel_left=self.getLeftWheelVelocity(x), vel_right=self.getRightWheelVelocity(x))
+        calibratedVelLeft = self.getLeftWheelVelocity(x) * (1 - self.trim)
+        calibratedVelRight = self.getRightWheelVelocity(x) * (1 + self.trim)
+        message = WheelsCmdStamped(vel_left=calibratedVelLeft, vel_right=calibratedVelRight)
         self._publisher.publish(message)
 
     # WORK AREA - END
