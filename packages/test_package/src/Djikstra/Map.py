@@ -1,6 +1,6 @@
 from typing import List
-from packages.test_package.src.Tile import Tile
-from packages.test_package.src.TileType import TileType
+from packages.test_package.src.Djikstra.Tile import Tile
+from packages.test_package.src.Djikstra.TileType import TileType
 
 class Map:
     def __init__(self, tiles: List[List[Tile]]):
@@ -23,5 +23,3 @@ DUCKIETOWN_CITY = Map(
         [Tile(TileType.CURVE), Tile(TileType.STRAIGHT), Tile(TileType.STRAIGHT), Tile(TileType.THREE_WAY_INTERSECTION), Tile(TileType.STRAIGHT), Tile(TileType.CURVE)]
     ]
 )
-
-print(DUCKIETOWN_CITY)
