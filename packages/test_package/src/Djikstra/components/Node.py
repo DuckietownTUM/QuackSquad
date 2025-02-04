@@ -4,6 +4,12 @@ class Node:
         self.coordinate = coordinate
         self.value = value
 
+    def __eq__(self, other):
+        return isinstance(other, Node) and self.id == other.id
+
+    def __hash__(self):
+        return hash(self.value)
+
     def __str__(self):
         return f"Node(id={self.id}, coordinate={self.coordinate}, value={self.value})"
 

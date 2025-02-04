@@ -18,9 +18,11 @@ class Graph:
             for y in range(0, len(map.tiles[x])):
                 tile = map.tiles[x][y]
                 if tile:
-                    id = y * len(map.tiles[x]) + x
-                    node = Node(id, (x, y), tile)
-                    self.nodes.append(node) # FIX: the node could already exists
+                    id = x * len(map.tiles[x]) + y
+                    node = next((node for node in self.nodes if node.id == id), None)
+                    if not node:
+                        node = Node(id, (x, y), tile)
+                        self.nodes.append(node)
                     for k in range(0, 4):
                         direction = directions[k]
                         neighbor_x = x + direction[0]
@@ -28,12 +30,11 @@ class Graph:
                         if 0 <= neighbor_x < len(map.tiles) and 0 <= neighbor_y < len(map.tiles[x]):
                             neighbor_tile = map.tiles[neighbor_x][neighbor_y]
                             if neighbor_tile:
-                                neighbor_id = neighbor_y * len(map.tiles[neighbor_x]) + neighbor_x
-                                if x < neighbor_x or y < neighbor_y:
+                                neighbor_id = neighbor_x * len(map.tiles[neighbor_x]) + neighbor_y
+                                neighbor_node = next((node for node in self.nodes if node.id == neighbor_id), None)
+                                if not neighbor_node:
                                     neighbor_node = Node(neighbor_id, (neighbor_x, neighbor_y), neighbor_tile)
                                     self.nodes.append(neighbor_node)
-                                else:
-                                    neighbor_node = next((node for node in self.nodes if node.id == neighbor_id))
                                 edge = next((edge for edge in self.edges if edge.node_a == neighbor_node and edge.node_b == node), None)
                                 if not edge:
                                     edge = Edge(node, neighbor_node, 1)
