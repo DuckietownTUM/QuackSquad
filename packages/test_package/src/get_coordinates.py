@@ -6,34 +6,44 @@ import math
 from duckietown.dtros import DTROS, NodeType
 from duckietown_msgs.msg import WheelsCmdStamped, WheelEncoderStamped
 
-
-# throttle and direction for each wheel
-THROTTLE_LEFT = 0.25        # 50% throttle
-DIRECTION_LEFT = 1         # forward
-THROTTLE_RIGHT = 0.25       # 30% throttle
-DIRECTION_RIGHT = 1       # backward
+STRAIGHT_THRESHOLD = 0.05 # in rad
 MM_PER_TICK = 1.55
-BASE_LENGTH = 6.8     #in mm
+BASE_LENGTH = 68     # in mm
 
-
-class WheelControlNode(DTROS):
+class KinematicsNode(DTROS):
 
 	def __init__(self, node_name):
 		# initialize the DTROS parent class
-		super(WheelControlNode, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
+		super(KinematicsNode, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
+
 		# static parameters
-		self._vehicle_name = "duckie"
-		wheels_topic = f"/{self._vehicle_name}/wheels_driver_node/wheels_cmd"
-		left_encoder_topic = f"/{self._vehicle_name}/left_wheel_encoder_node/tick"
-		right_encoder_topic = f"/{self._vehicle_name}/right_wheel_encoder_node/tick"
-		# form the message
-		self.flag_first = True
-		self._ticks_left = None
-		self._ticks_right = None
-		self._vel_left = THROTTLE_LEFT * DIRECTION_LEFT
-		self._vel_right = THROTTLE_RIGHT * DIRECTION_RIGHT
-		# construct publisher
-		self._publisher = rospy.Publisher(wheels_topic, WheelsCmdStamped, queue_size=1)
+		vehicle_name = os.getenv("VEHICLE_NAME", "duckie") # 'duckie' as default, useful when lauching from outside the container
+		left_encoder_topic = f"/{vehicle_name}/left_wheel_encoder_node/tick"
+		right_encoder_topic = f"/{vehicle_name}/right_wheel_encoder_node/tick"
+
+		self.flag_first = True # Flag to skip first loop
+
+		# Current encoder tick counters
+		self.ticks_left = None
+		self.ticks_right = None
+
+		# New encoder tick values
+		self.new_ticks_left = None
+		self.new_ticks_right = None
+
+		# Last timestamp values
+		self.last_timestamp_left = None
+		self.last_timestamp_right = None
+
+		# New timestamp values
+		self.new_timestamp_left = None
+		self.new_timestamp_right = None
+
+		# Robot position and orientation
+		self.pos = [0.0, 0.0] # [x, y] (in mm)
+		self.angle = 0.0  # in radians
+
+		# Subscribers
 		self.sub_left = rospy.Subscriber(left_encoder_topic, WheelEncoderStamped, self.callback_left)
 		self.sub_right = rospy.Subscriber(right_encoder_topic, WheelEncoderStamped, self.callback_right)
 
@@ -41,74 +51,80 @@ class WheelControlNode(DTROS):
 		# log general information once at the beginning
 		rospy.loginfo_once(f"Left encoder resolution: {data.resolution}")
 		rospy.loginfo_once(f"Left encoder type: {data.type}")
+
 		# store data value
-		self._ticks_left = data.data
+		self.new_ticks_left = data.data
+		self.new_timestamp_left = data.header.stamp
 
 	def callback_right(self, data):
 		# log general information once at the beginning
 		rospy.loginfo_once(f"Right encoder resolution: {data.resolution}")
 		rospy.loginfo_once(f"Right encoder type: {data.type}")
+
 		# store data value
-		self._ticks_right = data.data
+		self.new_ticks_right = data.data
+		self.new_timestamp_right = data.header.stamp
 
 	def run(self):
-		prev_tick_l = 0
-		prev_tick_r = 0
-		dist_l = 0
-		dist_r = 0
-		dist_to_icr = 0
-		angle = 0
-		prev_angle = 0
-
-		x_coord = 0
-		y_coord = 0
-
 		# publish received tick messages every 0.05 second (20 Hz)
 		rate = rospy.Rate(20)
-		message = WheelsCmdStamped(vel_left=self._vel_left, vel_right=self._vel_right)
+
 		while not rospy.is_shutdown():
-			if self._ticks_right is not None and self._ticks_left is not None:
-				delta_tick_l = self._ticks_left - prev_tick_l
-				delta_tick_r = self._ticks_right - prev_tick_r
+			if self.new_ticks_left is None or self.new_ticks_right is None:
+				rate.sleep()
+				continue
 
-				if self.flag_first:
-					prev_tick_l = self._ticks_left
-					prev_tick_r = self._ticks_right
-					self.flag_first = False
-					continue  # Skip first loop to avoid incorrect deltas
+			if self.flag_first:
+				self.ticks_left = self.new_ticks_left
+				self.ticks_right = self.new_ticks_right
+				self.last_timestamp_left = self.new_timestamp_left
+				self.last_timestamp_right = self.new_timestamp_right
+				self.flag_first = False
+				rate.sleep()
+				continue  # Skip first loop to avoid incorrect deltas
 
-				dist_l = delta_tick_l * MM_PER_TICK
-				dist_r = delta_tick_r * MM_PER_TICK
+			# Compute the delta times
+			delta_time_left = (self.new_timestamp_left - self.last_timestamp_left).to_sec()
+			delta_time_right = (self.new_timestamp_right - self.last_timestamp_right).to_sec()
+			avg_delta_time = (delta_time_left + delta_time_right) / 2
 
-				if abs(dist_r - dist_l) < 0.5:  # Going straight
-					x_coord += (dist_l + dist_r) / 2 * math.cos(prev_angle)
-					y_coord += (dist_l + dist_r) / 2 * math.sin(prev_angle)
-				else:  # Turning
-					angle = (dist_r - dist_l) / BASE_LENGTH
-					dist_to_icr = (BASE_LENGTH / 2) * ((dist_r + dist_l) / (dist_r - dist_l))
+			# Compute the linear distances traveled by the wheels
+			vel_left = (self.new_ticks_left - self.ticks_left)*MM_PER_TICK / delta_time_left 
+			vel_right = (self.new_ticks_right - self.ticks_right)*MM_PER_TICK / delta_time_right
 
-					x_coord += dist_to_icr * (math.sin(prev_angle + angle) - math.sin(prev_angle))
-					y_coord += dist_to_icr * (-math.cos(prev_angle + angle) + math.cos(prev_angle))
+			# Update the ticks values
+			self.ticks_left = self.new_ticks_left
+			self.ticks_right = self.new_ticks_right
 
-				prev_angle += angle  # Update after computing new position
+			# Compute linear and angular velocities
+			avg_vel = (vel_left + vel_right) / 2
+			angular_vel = (vel_right - vel_left) / BASE_LENGTH # omega (ω)
 
-				prev_tick_l = self._ticks_left
-				prev_tick_r = self._ticks_right
+			if abs(angular_vel) < STRAIGHT_THRESHOLD:  # Going straight
+				self.pos[0] += avg_vel * avg_delta_time * math.cos(self.angle + angular_vel * avg_delta_time)
+				self.pos[1] += avg_vel * avg_delta_time * math.sin(self.angle + angular_vel * avg_delta_time)
+			else:  # Turning
+				# Compute the distance to the instantaneous center of rotation (ICR)
+				dist_to_icr = avg_vel / angular_vel # from formula R = B/2 * (Vr + Vl) / (Vr - Vl)
 
-				msg = f"{x_coord//600}|{y_coord//600}(X:{x_coord/10:.2f}/Y:{y_coord/10:.2f}) | R:{dist_to_icr:.2f} | w:{angle:.4f}"
-				rospy.loginfo(msg)
+				self.pos[0] += dist_to_icr * (math.sin(self.angle + angular_vel*avg_delta_time) - math.sin(self.angle))
+				self.pos[1] += dist_to_icr * (-math.cos(self.angle + angular_vel*avg_delta_time) + math.cos(self.angle))
+
+			# Update after computing new position
+			self.angle += angular_vel * avg_delta_time
+
+			# log information about the position
+			msg = f"{self.pos[0]//600}|{self.pos[1]//600}(X:{self.pos[0]/10:.2f}/Y:{self.pos[1]/10:.2f}) | Angle:{self.angle*180/math.pi:.4f}"
+			rospy.loginfo(msg)
 
 			rate.sleep()
 
 
-	def on_shutdown(self):
-		stop = WheelsCmdStamped(vel_left=0, vel_right=0)
-		self._publisher.publish(stop)
+	# def on_shutdown(self):
+		# store information before shutdown (maybe, we'll see)
 
 if __name__ == '__main__':
 	# create the node
-	node = WheelControlNode(node_name='wheel_control_node')
+	node = KinematicsNode(node_name='kinematics_node')
 	# run node
 	node.run()
-	# keep the process from terminating
-	rospy.spin()
