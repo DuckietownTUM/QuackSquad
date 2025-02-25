@@ -11,6 +11,8 @@ STRAIGHT_THRESHOLD = 0.05 # in rad
 MM_PER_TICK = 1.55
 BASE_LENGTH = 100     	# in mm
 WHEEL_RADIUS = 31.8 	# in mm
+RATE = 20
+SMOOTH_FACTOR = 0.5
 
 class OdometryNode(DTROS):
 
@@ -34,9 +36,10 @@ class OdometryNode(DTROS):
 		# Counter for message received
 		self.cb_left = 0
 		self.cb_right = 0
+		self.cb_angle = 0
 
 		# Robot position and orientation
-		self.pos = {"x":0.0, "y":0.0} # [x, y] (in mm)
+		self.pos = {"x":300.0, "y":300.0} # [x, y] (in mm)
 		self.angle = 0.0  # in radians
 
 		# Subscribers
@@ -62,25 +65,27 @@ class OdometryNode(DTROS):
 
 		if self.prev_ticks_right is None:
 			self.prev_ticks_right = data.data
-			
+
 		# store data value
 		self.new_ticks_right = data.data
+		self.cb_right += 1
 
 	def run(self):
 		# publish received tick messages every 0.1 second (10 Hz)
-		rate = rospy.Rate(10)
+		rate = rospy.Rate(RATE)
 
 		while not rospy.is_shutdown():
-			if not (self.new_ticks_left is None or self.new_ticks_right is None):
-				self.compute_pos()
-			
+			#if self.new_ticks_left is None or self.new_ticks_right is None:
+				#return
+
+			self.compute_pos()
 			rate.sleep()
 
 	def compute_pos(self):
 		# Don't compute if no message received from one wheel (could be a threshold)
 		if self.cb_left == 0 or self.cb_right == 0:
 			return
-		
+
 		# Compute the linear distances traveled by the wheels
 		delta_tick_left = self.new_ticks_left - self.prev_ticks_left
 		delta_tick_right = self.new_ticks_right - self.prev_ticks_right
@@ -91,10 +96,11 @@ class OdometryNode(DTROS):
 		delta_angle = (dist_right - dist_left) / BASE_LENGTH # theta
 
 		# Update after computing new position
-		self.angle += delta_angle
-
-		self.pos.x += avg_dist * math.cos(self.angle)
-		self.pos.y += avg_dist * math.sin(self.angle )
+		self.pos['x'] += avg_dist * math.cos(self.angle)
+		self.pos['y'] -= avg_dist * math.sin(self.angle)
+		self.angle = SMOOTH_FACTOR*(self.angle + delta_angle) + (1 - SMOOTH_FACTOR)*self.angle
+		#self.angle += delta_angle
+		self.angle = (self.angle) % (2 * math.pi)
 
 		# Update the ticks values
 		self.prev_ticks_left = self.new_ticks_left
@@ -105,7 +111,7 @@ class OdometryNode(DTROS):
 		self.cb_right = 0
 
 		# log information about the position
-		msg = f"{self.pos.x//600}|{self.pos.y//600}(X:{self.pos.x/10:.2f}/Y:{self.pos.y/10:.2f}) | Angle:{self.angle*180/math.pi:.4f}"
+		msg = f"{self.pos['x']//600}|{self.pos['y']//600}(X:{self.pos['x']/10:.2f}/Y:{self.pos['y']/10:.2f}) | Angle:{self.angle:.4f}"
 		rospy.loginfo(msg)
 
 
