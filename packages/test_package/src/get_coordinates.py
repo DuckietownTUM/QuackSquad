@@ -11,8 +11,9 @@ STRAIGHT_THRESHOLD = 0.05 # in rad
 MM_PER_TICK = 1.55
 BASE_LENGTH = 100     	# in mm
 WHEEL_RADIUS = 31.8 	# in mm
-RATE = 20
-SMOOTH_FACTOR = 0.5
+RATE = 10
+SMOOTH_FACTOR = 0.95
+HEADING_RANGE = math.pi/8 # 22.5°
 
 class OdometryNode(DTROS):
 
@@ -41,6 +42,7 @@ class OdometryNode(DTROS):
 		# Robot position and orientation
 		self.pos = {"x":300.0, "y":300.0} # [x, y] (in mm)
 		self.angle = 0.0  # in radians
+		self.heading = 0.0
 
 		# Subscribers
 		self.sub_left = rospy.Subscriber(left_encoder_topic, WheelEncoderStamped, self.callback_left)
@@ -101,6 +103,8 @@ class OdometryNode(DTROS):
 		#self.angle = SMOOTH_FACTOR*(self.angle + delta_angle) + (1 - SMOOTH_FACTOR)*self.angle
 		self.angle += delta_angle
 		self.angle = (self.angle) % (2 * math.pi)
+		self.heading = (((self.angle + HEADING_RANGE/2)%(2*math.pi)) // HEADING_RANGE) * HEADING_RANGE
+		#self.angle = self.heading
 
 		# Update the ticks values
 		self.prev_ticks_left = self.new_ticks_left
@@ -110,8 +114,9 @@ class OdometryNode(DTROS):
 		self.cb_left = 0
 		self.cb_right = 0
 
+
 		# log information about the position
-		msg = f"{self.pos['x']//600}|{self.pos['y']//600}(X:{self.pos['x']/10:.2f}/Y:{self.pos['y']/10:.2f}) | Angle:{self.angle:.4f}"
+		msg = f"{self.pos['x']//600}|{self.pos['y']//600}(X:{self.pos['x']/10:.2f}/Y:{self.pos['y']/10:.2f}) | Angle:{self.angle:.4f} | Heading:{self.heading}"
 		rospy.loginfo(msg)
 
 
