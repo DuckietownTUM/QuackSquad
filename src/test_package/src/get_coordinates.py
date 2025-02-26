@@ -98,13 +98,13 @@ class OdometryNode(DTROS):
 		delta_angle = (dist_right - dist_left) / BASE_LENGTH # theta
 
 		# Update after computing new position
-		self.pos['x'] += avg_dist * math.cos(self.heading)
-		self.pos['y'] -= avg_dist * math.sin(self.heading)
+		self.pos['x'] += avg_dist * math.cos(self.angle)
+		self.pos['y'] -= avg_dist * math.sin(self.angle)
 		#self.angle = SMOOTH_FACTOR*(self.angle + delta_angle) + (1 - SMOOTH_FACTOR)*self.angle
 		self.angle += delta_angle
 		self.angle = (self.angle) % (2 * math.pi)
 		self.heading = (((self.angle + HEADING_RANGE/2)%(2*math.pi)) // HEADING_RANGE) * HEADING_RANGE
-		self.angle = self.heading
+		#self.angle = self.heading
 
 		# Update the ticks values
 		self.prev_ticks_left = self.new_ticks_left
