@@ -7,7 +7,7 @@ graph = Graph()
 graph.generate_from_map(DUCKIETOWN_CITY)
 
 start_coordinate = (2, 0)
-to_coordinate = (2,4)
+to_coordinate = (2, 4)
 start = next((node for node in graph.nodes if node.coordinate == start_coordinate))
 to = next((node for node in graph.nodes if node.coordinate == to_coordinate))
 route = Route(start, to)
