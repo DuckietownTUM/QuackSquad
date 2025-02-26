@@ -2,7 +2,6 @@
 
 import os
 import rospy
-import math
 from duckietown.dtros import DTROS, NodeType
 from duckietown_msgs.msg import WheelsCmdStamped, WheelEncoderStamped
 
@@ -12,8 +11,6 @@ THROTTLE_LEFT = 0.25        # 50% throttle
 DIRECTION_LEFT = 1         # forward
 THROTTLE_RIGHT = 0.25       # 30% throttle
 DIRECTION_RIGHT = 1       # backward
-MM_PER_TICK = 1.55
-BASE_LENGTH = 6.8     #in mm
 
 
 class WheelControlNode(DTROS):
@@ -51,38 +48,14 @@ class WheelControlNode(DTROS):
         self._ticks_right = data.data
 
     def run(self):
-        prev_tick_l = 0
-        prev_tick_r = 0
-        dist_l = 0
-        dist_r = 0
-        dist_to_icr = 0
-        angle = 0
-        prev_angle = 0
-
-        x_coord = 0
-        y_coord = 0
-
         # publish received tick messages every 0.05 second (20 Hz)
         rate = rospy.Rate(20)
         message = WheelsCmdStamped(vel_left=self._vel_left, vel_right=self._vel_right)
         while not rospy.is_shutdown():
             #self._publisher.publish(message)
             if self._ticks_right is not None and self._ticks_left is not None:
-                delta_tick_l = self._ticks_left - prev_tick_l
-                delta_tick_r = self._ticks_right - prev_tick_r
-                dist_l = delta_tick_l * MM_PER_TICK
-                dist_r = delta_tick_r * MM_PER_TICK
-
-                angle = (dist_r - dist_l) / BASE_LENGTH
-                dist_to_icr = BASE_LENGTH/2 * (dist_r + dist_l)/(dist_r - dist_l)
-
-                x_coord = x_coord + dist_to_icr*math.sin(prev_angle) + dist_to_icr*math.cos(prev_angle + angle)
-                y_coord = x_coord + dist_to_icr*math.cos(prev_angle) + dist_to_icr*math.sin(prev_angle + angle)
-                prev_angle += angle
                 # start printing values when received from both encoders
-                # msg = f"Wheel encoder ticks [LEFT, RIGHT]: {self._ticks_left}, {self._ticks_right}"
-                msg = f"X:{x_coord} | Y:{y_coord} | R:{dist_to_icr} | w:{angle}"
-
+                msg = f"Wheel encoder ticks [LEFT, RIGHT]: {self._ticks_left}, {self._ticks_right}"
                 rospy.loginfo(msg)
             rate.sleep()
 

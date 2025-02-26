@@ -4,7 +4,6 @@ import rospy
 from duckietown.dtros import DTROS, NodeType
 from duckietown_msgs.msg import WheelsCmdStamped
 
-import math
 
 class PilotNode(DTROS):
 
@@ -14,51 +13,19 @@ class PilotNode(DTROS):
         vehicle_name = os.environ['VEHICLE_NAME']
         topic = f"/{vehicle_name}/wheels_driver_node/wheels_cmd"
         self._publisher = rospy.Publisher(topic, WheelsCmdStamped, queue_size=1)
-
-        self.trim = rospy.get_param(f"/{vehicle_name}/kinematics_node/trim")
+        self.flag = False
 
     def goStraight(self):
+        message = WheelsCmdStamped(vel_left=0.5, vel_right=0.5)
+        self._publisher.publish(message)
+        #rospy.sleep(2)
+
+    def turnLeft(self):
         message = WheelsCmdStamped(vel_left=1.0, vel_right=1.0)
         self._publisher.publish(message)
         rospy.sleep(2)
 
-    # WORK AREA - START
-
-    def getLeftWheelVelocity(self, x):
-        v = 1
-        d = 10
-        r = 18
-
-        startTime = 1.5
-        endTime = 4.5
-
-        if (0 <= x < startTime):
-            return v
-        elif (startTime <= x < endTime):
-            return v * ((d/(2 * r)) * math.sin(math.pi * (x - startTime)/(endTime - startTime)) + 1.0)
-        else:
-            return v
-
-    def getRightWheelVelocity(self, x):
-        startTime = 1.5
-        endTime = 4.5
-
-        if (0 <= x < startTime):
-            return self.getLeftWheelVelocity(x)
-        elif (startTime <= x < endTime):
-            return 2-self.getLeftWheelVelocity(x)
-        else:
-            return self.getLeftWheelVelocity(x)
-
-    def turnRight(self, x):
-        calibratedVelLeft = self.getLeftWheelVelocity(x) * (1 - self.trim)
-        calibratedVelRight = self.getRightWheelVelocity(x) * (1 + self.trim)
-        message = WheelsCmdStamped(vel_left=calibratedVelLeft, vel_right=calibratedVelRight)
-        self._publisher.publish(message)
-
-    # WORK AREA - END
-
-    def turnLeft(self):
+    def turnRight(self):
         message = WheelsCmdStamped(vel_left=1.0, vel_right=1.0)
         self._publisher.publish(message)
         rospy.sleep(2)
@@ -66,18 +33,25 @@ class PilotNode(DTROS):
     def stay(self):
         stop = WheelsCmdStamped(vel_left=0.0, vel_right=0.0)
         self._publisher.publish(stop)
-        rospy.sleep(2)
+        #rospy.sleep(2)
+
+    def start_and_stop(self):
+        start = WheelsCmdStamped(vel_left=0.5, vel_right=0.5)
+        stop = WheelsCmdStamped(vel_left=0.0, vel_right=0.0)
+        self._publisher.publish(start)
+        rospy.sleep(1)
+        self._publisher.publish(stop)
+        rospy.loginfo("after start_and_stop")
+        self.flag = True
 
     def run(self):
-        rate = rospy.Rate(10)
-        start_time = rospy.Time.now()
-
-        while not rospy.is_shutdown():
-            current_time = rospy.Time.now()  # Current ROS time
-            elapsed_time = (current_time - start_time).to_sec()
-            self.turnRight(elapsed_time)
-
-            rate.sleep()
+        rate = rospy.Rate(20)
+        while not rospy.is_shutdown() and not self.flag:
+            #rospy.loginfo("test")
+            self.goStraight()
+            rospy.sleep(1)
+            self.stay()
+            self.flag = True
 
     def on_shutdown(self):
         stop = WheelsCmdStamped(vel_left=0.0, vel_right=0.0)
