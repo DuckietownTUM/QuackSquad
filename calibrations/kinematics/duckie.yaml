@@ -1,9 +1,0 @@
-baseline: 0.1
-calibration_time: 2024-12-07-22-43-23
-gain: 1.0
-k: 27.0
-limit: 1.0
-omega_max: 8.0
-radius: 0.0318
-trim: 0.05
-v_max: 1.0

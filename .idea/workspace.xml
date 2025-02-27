@@ -5,15 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c12f23eb-9dfd-45fc-93f9-75187ccee832" name="Changes" comment="map sample class.">
-      <change afterPath="$PROJECT_DIR$/packages/test_package/src/Djikstra/components/Route.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/test_package/src/Djikstra/components/Path.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/test_package/src/Djikstra/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/packages/test_package/src/Djikstra/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
     </list>
-    <list id="179987e1-c6b3-43a7-89f0-e0fc1972ee0f" name="Changes by andreapellegrin" comment="">
-      <change beforePath="$PROJECT_DIR$/packages/test_package/src/Djikstra/components/Graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/packages/test_package/src/Djikstra/components/Graph.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/packages/test_package/src/Djikstra/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/packages/test_package/src/Djikstra/main.py" afterDir="false" />
-    </list>
+    <list id="179987e1-c6b3-43a7-89f0-e0fc1972ee0f" name="Changes by andreapellegrin" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -35,21 +29,12 @@
     &quot;assignee&quot;: &quot;fathia08-ux&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/Zen-Lex/duckietown.git&quot;,
-    &quot;accountId&quot;: &quot;ec6d8e6f-76be-42b0-8438-dea061db5972&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Zen-Lex/duckietown.git",
+    "accountId": "1b7b3172-16ef-4222-9e63-f69a123ff399"
   }
-}</component>
-  <component name="LineStatusTrackerManager">
-    <file path="$PROJECT_DIR$/packages/test_package/src/Djikstra/main.py">
-      <ranges>
-        <range start1="2" end1="2" start2="2" end2="4" changelist="c12f23eb-9dfd-45fc-93f9-75187ccee832" />
-        <range start1="6" end1="8" start2="8" end2="16" changelist="179987e1-c6b3-43a7-89f0-e0fc1972ee0f" />
-        <range start1="9" end1="11" start2="17" end2="23" changelist="179987e1-c6b3-43a7-89f0-e0fc1972ee0f" />
-      </ranges>
-    </file>
-  </component>
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0
 }</component>
@@ -68,6 +53,7 @@
     "Python.TileType.executor": "Run",
     "Python.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
     "last_opened_file_path": "/Users/fathiaismail/PycharmProjects/duckietown/packages/test_package/src",
     "node.js.detected.package.eslint": "true",
@@ -91,8 +77,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-PY-242.23339.19" />
-        <option value="bundled-python-sdk-0029f7779945-399fe30bd8c1-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.23339.19" />
+        <option value="bundled-js-predefined-d6986cc7102b-76f8388c3a79-JavaScript-PY-243.24978.54" />
+        <option value="bundled-python-sdk-91e3b7efe1d4-466328ff949b-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.24978.54" />
       </set>
     </attachedChunks>
   </component>
@@ -114,6 +100,7 @@
       <workItem from="1738051264906" duration="20922000" />
       <workItem from="1738692245510" duration="9919000" />
       <workItem from="1739291195511" duration="7599000" />
+      <workItem from="1740619892768" duration="23000" />
     </task>
     <task id="LOCAL-00001" summary="Pilot sample class.">
       <option name="closed" value="true" />
@@ -152,6 +139,17 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Pilot sample class." />
