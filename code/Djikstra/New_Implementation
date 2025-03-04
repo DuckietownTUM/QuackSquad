@@ -1,0 +1,83 @@
+FUNCTION initialize_graph(DUCKIETOWN_CITY):
+    GRAPH = Graph()   # Create an empty graph instance
+
+    FOR EACH TILE (row, col) IN DUCKIETOWN_CITY:
+        IF TILE is NOT None:
+            GRAPH.add_node((row, col, "right_lane"))   # Right lane node
+            GRAPH.add_node((row, col, "left_lane"))    # Left lane node
+
+            IF TILE is STRAIGHT:
+                # Move forward, staying in the same lane
+                GRAPH.add_edge((row, col, "right_lane"), (row, col+1, "right_lane"), weight=1)
+                GRAPH.add_edge((row, col, "left_lane"), (row, col+1, "left_lane"), weight=1)
+
+            ELSE IF TILE is CURVE:
+                # Right lane curves right
+                GRAPH.add_edge((row, col, "right_lane"), (row+1, col, "right_lane"), weight=1)
+
+                # Left lane curves left
+                GRAPH.add_edge((row, col, "left_lane"), (row, col-1, "left_lane"), weight=1)
+
+            ELSE IF TILE is THREE_WAY_INTERSECTION:
+                # Vehicles continue straight or turn if allowed
+                GRAPH.add_edge((row, col, "right_lane"), (row+1, col, "right_lane"), weight=1)
+                GRAPH.add_edge((row, col, "left_lane"), (row, col+1, "left_lane"), weight=1)
+
+            ELSE IF TILE is FOUR_WAY_INTERSECTION:
+                # Vehicles can turn left, right, or go straight (NO U-TURNS)
+                GRAPH.add_edge((row, col, "right_lane"), (row+1, col, "right_lane"), weight=1)
+                GRAPH.add_edge((row, col, "left_lane"), (row-1, col, "left_lane"), weight=1)
+                GRAPH.add_edge((row, col, "right_lane"), (row, col+1, "right_lane"), weight=1)
+                GRAPH.add_edge((row, col, "left_lane"), (row, col-1, "left_lane"), weight=1)
+
+    RETURN GRAPH
+
+CLASS Dijkstra:
+
+    FUNCTION __init__(graph: Graph):
+        self.graph = graph
+        self.distances = {}   # Stores the shortest known distances
+        self.predecessors = {}   # Stores previous nodes for path reconstruction
+        self.settled_nodes = []   # Nodes where the shortest path is known
+        self.unsettled_nodes = []   # Nodes still being explored
+
+    FUNCTION initialize_distance(starting_node):
+        FOR EACH NODE IN self.graph.nodes:
+            self.distances[NODE] = INFINITY
+        self.distances[starting_node] = 0
+        self.unsettled_nodes.append(starting_node)
+
+    FUNCTION get_lowest_distance_node():
+        LOWEST_NODE = None
+        FOR NODE IN self.unsettled_nodes:
+            IF LOWEST_NODE is None OR self.distances[NODE] < self.distances[LOWEST_NODE]:
+                LOWEST_NODE = NODE
+        RETURN LOWEST_NODE
+
+    FUNCTION calculate_shortest_path(starting_node, goal_node):
+        CALL initialize_distance(starting_node)
+
+        WHILE self.unsettled_nodes is NOT empty:
+            CURRENT_NODE = CALL get_lowest_distance_node()
+            REMOVE CURRENT_NODE FROM self.unsettled_nodes
+            ADD CURRENT_NODE TO self.settled_nodes
+
+            FOR EACH (NEIGHBOR, WEIGHT) IN self.graph.get_neighbors(CURRENT_NODE):
+                IF NEIGHBOR is NOT IN self.settled_nodes:
+                    NEW_DISTANCE = self.distances[CURRENT_NODE] + WEIGHT
+                    IF NEW_DISTANCE < self.distances[NEIGHBOR]:
+                        self.distances[NEIGHBOR] = NEW_DISTANCE
+                        self.predecessors[NEIGHBOR] = CURRENT_NODE
+                        ADD NEIGHBOR TO self.unsettled_nodes
+
+        RETURN CALL reconstruct_path(goal_node)
+
+    FUNCTION reconstruct_path(goal_node):
+        PATH = []
+        CURRENT_NODE = goal_node
+
+        WHILE CURRENT_NODE IS IN self.predecessors:
+            INSERT CURRENT_NODE AT START OF PATH
+            CURRENT_NODE = self.predecessors[CURRENT_NODE]
+
+        RETURN PATH
