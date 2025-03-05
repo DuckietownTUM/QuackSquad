@@ -3,25 +3,24 @@ FUNCTION get_coordinates(Duckietown_city)
 RETURN x of all tiles
 RETURN y of all tiles
 FUNCTION get_direction(tile_where_we_are, intersection_tile,next_tile):
-IF (intersection_tile=="4W") or (intersection_tile=="3W")
-    IF (tile_where_we_are.getcoordinates.get(x)==next_tile.getcoordinates.get(x)) or (tile_where_we_are.getcoordinates.get(y)==next_tile.getcoordinates.get(y)
+    IF (tile_where_we_are.get(x)==next_tile.get(x)) or (tile_where_we_are.get(y)==next_tile.get(y)
         RETURN "STRAIGHT"
-    ELSE IF (tile_where_we_are.getcoordinates.get(x)==intersection_tile.getcoordinates.get(x))
-        IF (tile_where_we_are.getcoordinates.get(y)<intersection_tile.getcoordinates.get(y))
-            IF (tile_where_we_are.getcoordinates.get(x)>next_tile.getcoordinates.get(x))
+    ELSE IF (tile_where_we_are.get(x)==intersection_tile.get(x))
+        IF (tile_where_we_are.get(y)<next_tile.get(y))
+            IF (tile_where_we_are.get(x)>next_tile.get(x))
                 RETURN "RIGHT"
             RETURN "LEFT"
-        else
-            IF (tile_where_we_are.getcoordinates.get(x)>next_tile.getcoordinates.get(x))
+        ELSE
+            IF (tile_where_we_are.get(x)>next_tile.get(x))
                 RETURN "LEFT"
             RETURN "RIGHT"
-    ELSE IF(tile_where_we_are.getcoordinates.get(y)==intersection_tile.getcoordinates.get(y))
-         IF (tile_where_we_are.getcoordinates.get(x)<intersection_tile.getcoordinates.get(x))
-            IF (tile_where_we_are.getcoordinates.get(y)<next_tile.getcoordinates.get(y))
+    ELSE IF(tile_where_we_are.get(y)==intersection_tile.get(y))
+         IF (tile_where_we_are.get(x)<next_tile.get(x))
+            IF (tile_where_we_are.get(y)<next_tile.get(y))
                 RETURN "RIGHT"
             RETURN "LEFT"
-        else
-            IF (tile_where_we_are.getcoordinates.get(y)<next_tile.getcoordinates.get(y))
+        ELSE
+            IF (tile_where_we_are.get(y)<next_tile.get(y))
                 RETURN "LEFT"
             RETURN "RIGHT"
 

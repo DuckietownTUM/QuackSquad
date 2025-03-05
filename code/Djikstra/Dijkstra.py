@@ -87,3 +87,25 @@ class Dijkstra:
             self.get_adjacent_nodes(node)
 
         return self.get_path(route.end)
+
+
+    def get_directions(self, tile_where_we_are, intersection_tile, next_tile):
+        cur_x = tile_where_we_are.get('x')
+        cur_y = tile_where_we_are.get('y')
+        int_x = intersection_tile.get('x')
+        int_y = intersection_tile.get('y')
+        next_x= next_tile.getcoordinates().get('x')
+        next_y= next_tile.getcoordinates().get('y')
+        if cur_x == next_x or cur_y== next_y:
+            return "STRAIGHT"
+        if cur_x == int_x:
+            if cur_y < next_y:
+                return "RIGHT" if cur_x > next_x else "LEFT"
+            else:
+                return "LEFT" if cur_x > next_x else "RIGHT"
+
+        elif cur_y == int_y:
+            if cur_x < next_x:
+                return "RIGHT" if cur_y > next_y else "LEFT"
+            else:
+                return "LEFT" if cur_y > next_y else "RIGHT"
