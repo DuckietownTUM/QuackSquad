@@ -9,6 +9,8 @@ class Dijkstra:
         self.settled_nodes = []
         self.unsettled_nodes = []
 
+
+    x_values, y_values = graph.get_all_tile_coordinates()
     def initialize_distance(self, starting_node):
         for node in self.graph.nodes:
             self.distances[node] = float('inf')
@@ -89,23 +91,21 @@ class Dijkstra:
         return self.get_path(route.end)
 
 
-    def get_directions(self, tile_where_we_are, intersection_tile, next_tile):
-        cur_x = tile_where_we_are.get('x')
-        cur_y = tile_where_we_are.get('y')
-        int_x = intersection_tile.get('x')
-        int_y = intersection_tile.get('y')
-        next_x= next_tile.getcoordinates().get('x')
-        next_y= next_tile.getcoordinates().get('y')
+    def get_directions(self, tile_where_we_are, next_tile):
+        cur_x = tile_where_we_are.x
+        cur_y = tile_where_we_are.y
+        next_x= next_tile.x
+        next_y= next_tile.y
+
         if cur_x == next_x or cur_y== next_y:
             return "STRAIGHT"
-        if cur_x == int_x:
-            if cur_y < next_y:
-                return "RIGHT" if cur_x > next_x else "LEFT"
-            else:
-                return "LEFT" if cur_x > next_x else "RIGHT"
-
-        elif cur_y == int_y:
-            if cur_x < next_x:
-                return "RIGHT" if cur_y > next_y else "LEFT"
-            else:
-                return "LEFT" if cur_y > next_y else "RIGHT"
+        elif  ((cur_y==next_y-1) and ((cur_x<=next_x-1) or(cur_x>=next_x+1))) or ((cur_y==next_y+1) and ((cur_x<=next_x-1) or(cur_x>=next_x+1))):
+            if ((cur_y < next_y) and (cur_x > next_x)) or ((cur_x < next_x) and (cur_y > next_y)) :
+                return "RIGHT"
+            elif ((cur_x < next_x) and (cur_y < next_y)) or ((cur_y > next_y) and (cur_x > next_x)) :
+                return "LEFT"
+        elif ((cur_x==next_x-1) and ((cur_y<=next_y-1) or(cur_y>=next_y+1))) or ((cur_x==next_x+1) and ((cur_y<=next_y-1) or(cur_y>=next_y+1))):
+            if ((cur_x < next_x) and (cur_y < next_y)) or ((cur_y > next_y) and (cur_x > next_x)):
+                return "RIGHT"
+            elif ((cur_y < next_y) and (cur_x > next_x)) or ((cur_x < next_x) and (cur_y > next_y)):
+                return "LEFT"
