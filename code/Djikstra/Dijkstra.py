@@ -91,21 +91,4 @@ class Dijkstra:
         return self.get_path(route.end)
 
 
-    def get_directions(self, tile_where_we_are, next_tile):
-        cur_x = tile_where_we_are.x
-        cur_y = tile_where_we_are.y
-        next_x= next_tile.x
-        next_y= next_tile.y
 
-        if cur_x == next_x or cur_y== next_y:
-            return "STRAIGHT"
-        elif  ((cur_y==next_y-1) and ((cur_x<=next_x-1) or(cur_x>=next_x+1))) or ((cur_y==next_y+1) and ((cur_x<=next_x-1) or(cur_x>=next_x+1))):
-            if ((cur_y < next_y) and (cur_x > next_x)) or ((cur_x < next_x) and (cur_y > next_y)) :
-                return "RIGHT"
-            elif ((cur_x < next_x) and (cur_y < next_y)) or ((cur_y > next_y) and (cur_x > next_x)) :
-                return "LEFT"
-        elif ((cur_x==next_x-1) and ((cur_y<=next_y-1) or(cur_y>=next_y+1))) or ((cur_x==next_x+1) and ((cur_y<=next_y-1) or(cur_y>=next_y+1))):
-            if ((cur_x < next_x) and (cur_y < next_y)) or ((cur_y > next_y) and (cur_x > next_x)):
-                return "RIGHT"
-            elif ((cur_y < next_y) and (cur_x > next_x)) or ((cur_x < next_x) and (cur_y > next_y)):
-                return "LEFT"
