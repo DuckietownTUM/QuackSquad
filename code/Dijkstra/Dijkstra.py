@@ -1,4 +1,7 @@
-from packages.test_package.src.Djikstra.components.Graph import Graph
+
+from dijkstra import graph
+from components.Graph import Graph
+
 
 class Dijkstra:
 
@@ -10,7 +13,7 @@ class Dijkstra:
         self.unsettled_nodes = []
 
 
-    x_values, y_values = graph.get_all_tile_coordinates()
+    # x_values, y_values = graph.get_all_tile_coordinates()
     def initialize_distance(self, starting_node):
         for node in self.graph.nodes:
             self.distances[node] = float('inf')

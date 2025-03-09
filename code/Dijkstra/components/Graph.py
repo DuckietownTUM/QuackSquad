@@ -1,5 +1,6 @@
-from packages.test_package.src.Djikstra.components.Node import Node
-from packages.test_package.src.Djikstra.components.Edge import Edge
+from .Node import Node
+from .Edge import Edge
+
 
 class Graph:
     def __init__(self):

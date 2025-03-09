@@ -1,4 +1,5 @@
-from packages.test_package.src.Djikstra.TileType import TileType
+from TileType import TileType
+
 
 class Tile():
     def __init__(self, type: TileType):

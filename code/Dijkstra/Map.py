@@ -1,6 +1,8 @@
 from typing import List
-from packages.test_package.src.Djikstra.Tile import Tile
-from packages.test_package.src.Djikstra.TileType import TileType
+
+from Tile import Tile
+from TileType import TileType
+
 
 class Map:
     def __init__(self, tiles: List[List[Tile]]):
