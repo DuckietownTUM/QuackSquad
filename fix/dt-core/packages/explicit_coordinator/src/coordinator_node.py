@@ -204,7 +204,7 @@ class VehicleCoordinator:
         now = rospy.Time.now()
 
         # Publish LEDs
-        self.roof_light_pub.publish(self.roof_light)
+        #self.roof_light_pub.publish(self.roof_light)
 
         # Clearance to go
         self.clearance_to_go_pub.publish(CoordinationClearance(status=self.clearance_to_go))
@@ -234,8 +234,8 @@ class VehicleCoordinator:
         if not self.active:
             return
 
-        if self.traffic_light_intersection != UNKNOWN:
-            self.reconsider()
+        #if self.traffic_light_intersection != UNKNOWN:
+        #    self.reconsider()
         self.publish_topics()
 
     def reconsider(self):
@@ -395,7 +395,8 @@ class VehicleCoordinator:
             self.clearance_to_go = CoordinationClearance.WAIT
 
     def cbSwitch(self, switch_msg):
-        self.active = switch_msg.data
+        #Try to solve the srv unavaible problem by making the node always active
+        self.active = True #switch_msg.data
 
     def updateParams(self, event):
         self.tl_timeout = rospy.get_param("~tl_timeout")

@@ -32,7 +32,7 @@ nodes:
   lane_filter_node: "lane_filter_node/switch"
   ground_projection_node: "ground_projection_node/switch"
   # extras added
-
+  stop_line_filter_node: "stop_line_filter_node/switch"
 
 # Define state
 states:
@@ -52,6 +52,7 @@ states:
       - line_detector_node
       - lane_filter_node
       - ground_projection_node
+      - stop_line_filter_node
     lights: "CAR_DRIVING"
 
   NORMAL_JOYSTICK_CONTROL:
