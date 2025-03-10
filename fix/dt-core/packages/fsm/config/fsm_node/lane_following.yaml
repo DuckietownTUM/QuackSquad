@@ -33,6 +33,7 @@ nodes:
   ground_projection_node: "ground_projection_node/switch"
   # extras added
   stop_line_filter_node: "stop_line_filter_node/switch"
+  apriltag_node: "apriltag_detector_node/switch"
 
 # Define state
 states:
@@ -53,6 +54,7 @@ states:
       - lane_filter_node
       - ground_projection_node
       - stop_line_filter_node
+      - apriltag_node
     lights: "CAR_DRIVING"
 
   NORMAL_JOYSTICK_CONTROL:

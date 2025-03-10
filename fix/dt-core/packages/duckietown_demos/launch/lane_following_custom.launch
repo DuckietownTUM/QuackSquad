@@ -30,8 +30,14 @@ LP removing for now
 	    <arg name="/lane_following/lane_filter" value="true"/>
 	    <arg name="/lane_following/lane_controller" value="true"/>
 	    <arg name="/lane_following/stop_line_filter" value="true"/>
-            <arg name="LED" value="true"/>
+
+		<!-- LEDs -->
+        <arg name="LED" value="true"/>
 	    <arg name="/LED/emitter" value="true"/>
+
+		<!-- April Tags -->
+		<arg name="apriltags" value="true" />
+		<arg name="apriltags_random" value="true" />
 
   	</include>
 

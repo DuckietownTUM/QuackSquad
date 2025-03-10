@@ -39,10 +39,10 @@
         <arg name="/vehicle_avoidance/control" value="true"/>
         
 		<!-- Intersection arguments -->
-                <arg name="unicorn_intersection" value="true"/>
+        <arg name="unicorn_intersection" value="true"/>
 		<arg name="apriltags" value="true" />
 		<arg name="apriltags_random" value="true" />
-                <arg name="intersectionType" value="stopSign"/>
+        <arg name="intersectionType" value="stopSign"/>
 
 		<!-- Multi-bot behaviours -->
 		<arg name="coordination" value="true"/>
