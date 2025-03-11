@@ -108,6 +108,7 @@ class LaneControllerNode(DTROS):
         self.prev_at_stop_line_time = None
         self.current_pose_source = "lane_filter"
         self.turn_type = -1
+        self.is_turning = False
 
         self.drive_running = False
 
@@ -173,6 +174,9 @@ class LaneControllerNode(DTROS):
         Args:
             msg (:obj:`StopLineReading`): Message containing information about the next stop line.
         """
+        if self.is_turning:
+            return
+
         # Only stop at stop lines at minimum s second intervals
         if msg.stop_line_detected:
             self.stop_line_distance = np.sqrt(msg.stop_line_point.x**2 + msg.stop_line_point.y**2)
@@ -305,13 +309,15 @@ class LaneControllerNode(DTROS):
             # Choose the turn
             #turn = int(self.select_turn())
 
+            self.is_turning = True
             self.log(f"Selecting turn: {self.turn_type}")
-            self.execute_turn(1)
-            
+            self.execute_turn(self.turn_type)
+
             done_msg = BoolStamped()
             done_msg.header = Header()
             done_msg.data = True
             self.pub_intersection_done.publish(done_msg)
+            self.is_turning = False
 
         else:  # Lane following
             # Compute errors
