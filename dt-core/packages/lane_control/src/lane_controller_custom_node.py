@@ -43,6 +43,7 @@ class LaneControllerNode(DTROS):
 
     Publisher:
         ~car_cmd (:obj:`Twist2DStamped`): The computed control action
+
     Subscribers:
         ~lane_pose (:obj:`LanePose`): The lane pose estimate from the lane filter
         ~intersection_navigation_pose (:obj:`LanePose`): The lane pose estimate from intersection navigation
@@ -56,7 +57,7 @@ class LaneControllerNode(DTROS):
         # Initialize the DTROS parent class
         super(LaneControllerNode, self).__init__(node_name=node_name, node_type=NodeType.PERCEPTION)
 
-        # Add the node parameters to the parameters dictionary
+        #& Initialize the parameters (see `config/[file_name]/default.yaml`)
         self.params = dict()
         self.params["~v_bar"] = DTParam("~v_bar", param_type=ParamType.FLOAT, min_value=0.0, max_value=5.0)
         self.params["~k_d"] = DTParam("~k_d", param_type=ParamType.FLOAT, min_value=-100.0, max_value=100.0)
@@ -85,6 +86,7 @@ class LaneControllerNode(DTROS):
         self.r_turn_omega = DTParam("~r_turn_omega")
         self.r_turn_secs = DTParam("~r_turn_secs")
 
+        # Useful if the bot doesn't go straight on its own
         self.s_turn_v = DTParam("~s_turn_v")
         self.s_turn_omega = DTParam("~s_turn_omega")
         self.s_turn_secs = DTParam("~s_turn_secs")
@@ -95,7 +97,6 @@ class LaneControllerNode(DTROS):
         # Initialize variables
         self.wheels_cmd_executed = WheelsCmdStamped()
         self.pose_msg = None
-        self.pose_initialized = False
         self.pose_msg_dict = dict()
         self.last_s = None
         self.stop_line_distance = None
@@ -106,7 +107,6 @@ class LaneControllerNode(DTROS):
         self.prev_at_stop_line_time = None
         self.current_pose_source = "lane_filter"
         self.turn_type = -1
-        self.is_turning = False
 
         self.drive_running = False
 
@@ -172,12 +172,11 @@ class LaneControllerNode(DTROS):
 
         # Only stop at stop lines at minimum s second intervals
         if msg.at_stop_line and self.prev_at_stop_line_time is not None:
-            if msg.header.stamp.to_sec() - self.prev_at_stop_line_time.to_sec() < 6:
+            if msg.header.stamp.to_sec() - self.prev_at_stop_line_time.to_sec() < 2:
                     return
 
         self.at_stop_line = msg.at_stop_line
         self.prev_at_stop_line_time = msg.header.stamp
-
 
     def cb_all_poses(self, input_pose_msg, pose_source):
         """Callback receiving pose messages from multiple topics.
@@ -191,9 +190,7 @@ class LaneControllerNode(DTROS):
 
         if pose_source == self.current_pose_source:
             self.pose_msg_dict[pose_source] = input_pose_msg
-
             self.pose_msg = input_pose_msg
-
             self.save_pose(self.pose_msg)
 
     def cb_wheels_cmd_executed(self, msg_wheels_cmd):
@@ -231,7 +228,7 @@ class LaneControllerNode(DTROS):
         # Wait at the stop line
         self.log(f"Sleeping for {self.stop_time.value} seconds")
         rospy.sleep(self.stop_time.value)
-
+        
         if turn_type == 1:
             return
 
@@ -293,7 +290,6 @@ class LaneControllerNode(DTROS):
             self.log("At stop line")
             self.at_stop_line = False
 
-            self.is_turning = True
             self.log(f"Selecting turn: {self.turn_type}")
             self.execute_turn(self.turn_type)
 
@@ -301,7 +297,6 @@ class LaneControllerNode(DTROS):
             done_msg.header = Header()
             done_msg.data = True
             self.pub_intersection_done.publish(done_msg)
-            self.is_turning = False
 
         else:  # Lane following
             # Compute errors
