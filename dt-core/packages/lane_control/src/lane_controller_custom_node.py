@@ -144,7 +144,10 @@ class LaneControllerNode(DTROS):
 
     def cb_turn_type(self, msg):
         if msg.data == -1:
-            self.pub_idle_mode.publish(True)
+            idle_msg = BoolStamped()
+            idle_msg.header = Header()
+            idle_msg.data = True
+            self.pub_idle_mode.publish(idle_msg)
             rospy.sleep(3)  #stop the node for the transition time
 
         self.turn_type = msg.data
@@ -166,22 +169,14 @@ class LaneControllerNode(DTROS):
         Args:
             msg (:obj:`StopLineReading`): Message containing information about the next stop line.
         """
-        if self.is_turning:
-            return
 
         # Only stop at stop lines at minimum s second intervals
-        if msg.stop_line_detected:
-            self.stop_line_distance = np.sqrt(msg.stop_line_point.x**2 + msg.stop_line_point.y**2)
-        else:
-            self.stop_line_distance = None
-
-        self.at_stop_line = msg.at_stop_line
-
         if msg.at_stop_line and self.prev_at_stop_line_time is not None:
-            if msg.header.stamp.to_sec() - self.prev_at_stop_line_time.to_sec() < 8:
+            if msg.header.stamp.to_sec() - self.prev_at_stop_line_time.to_sec() < 6:
                     return
 
-            self.prev_at_stop_line_time = msg.header.stamp
+        self.at_stop_line = msg.at_stop_line
+        self.prev_at_stop_line_time = msg.header.stamp
 
 
     def cb_all_poses(self, input_pose_msg, pose_source):
@@ -332,7 +327,7 @@ class LaneControllerNode(DTROS):
                 omega = omega * 0.25
 
             else:
-                self.stop_line_distance = None
+                # stop_line_distance is always None to avoid unwanted very slow speed 
                 v, omega = self.controller.compute_control_action(d_err, phi_err, dt, wheels_cmd_exec, self.stop_line_distance)
 
             # For feedforward action (i.e. during intersection navigation)

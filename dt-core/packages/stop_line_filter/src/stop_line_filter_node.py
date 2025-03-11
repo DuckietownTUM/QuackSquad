@@ -5,10 +5,7 @@ import rospy
 from duckietown.dtros import DTParam, DTROS, NodeType, ParamType
 from duckietown_msgs.msg import BoolStamped, FSMState, LanePose, SegmentList, StopLineReading
 from geometry_msgs.msg import Point
-
-
-# import math
-
+from std_msgs.msg import Float32
 
 class StopLineFilterNode(DTROS):
     def __init__(self, node_name):
@@ -34,6 +31,8 @@ class StopLineFilterNode(DTROS):
         self.sleep = False
         self.should_stop = False
         self.at_stop = False
+        self.delta_dist = 0
+        self.prev_dist = 0
 
         ## publishers and subscribers
         self.sub_segs = rospy.Subscriber("~segment_list", SegmentList, self.cb_segments)
@@ -41,27 +40,44 @@ class StopLineFilterNode(DTROS):
         self.pub_stop_line_reading = rospy.Publisher("~stop_line_reading", StopLineReading, queue_size=1)
         self.pub_at_stop_line = rospy.Publisher("~at_stop_line", BoolStamped, queue_size=1)
 
+        self.sub_total_dist = rospy.Subscriber("deadreckoning_node/total_dist", Float32, self.cb_total_dist)
         self.sub_intersection_done = rospy.Subscriber("lane_controller_node/intersection_done", BoolStamped, self.cb_after_intersection)
+
+    def cb_total_dist(self, dist_msg):
+        if not self.should_stop and not self.at_stop:
+            self.prev_dist = dist_msg.data
+
+        elif self.should_stop and not self.at_stop:
+            if dist_msg.data - self.prev_dist >= self.stop_distance - 0.08: #stop_distance is from the center of the bot
+                self.at_stop = True
+                self.prev_dist  = dist_msg.data
+
+        else:
+            if dist_msg.data > self.prev_dist + 0.02:
+                self.at_stop = False
+                self.should_stop = False
+
+                stop_line_reading_msg = StopLineReading()
+                stop_line_reading_msg.stop_line_detected = False
+                stop_line_reading_msg.at_stop_line = False
+                self.pub_stop_line_reading.publish(stop_line_reading_msg)
+
+                self.sleep = True 
 
     def cb_after_intersection(self, done_msg):
         if not done_msg.data:
             return
 
-        self.loginfo("Blocking stop line detection after the intersection")
-        stop_line_reading_msg = StopLineReading()
-        stop_line_reading_msg.stop_line_detected = False
-        stop_line_reading_msg.at_stop_line = False
-        self.pub_stop_line_reading.publish(stop_line_reading_msg)
-        self.sleep = True
         rospy.sleep(self.off_time.value)
         self.sleep = False
+
         self.loginfo("Resuming stop line detection after the intersection")
 
     def cb_lane_pose(self, lane_pose_msg):
         self.lane_pose = lane_pose_msg
 
     def cb_segments(self, segment_list_msg):
-        if not self.switch or self.sleep:
+        if self.sleep:
             return
 
         good_seg_count = 0
@@ -91,6 +107,7 @@ class StopLineFilterNode(DTROS):
         stop_line_reading_msg.header.stamp = segment_list_msg.header.stamp
         if good_seg_count < self.min_segs.value:
             if not flag_seg_too_far:
+                self.should_stop = False
                 self.at_stop = False
 
             stop_line_reading_msg.stop_line_detected = False
@@ -107,7 +124,6 @@ class StopLineFilterNode(DTROS):
             # Only detect redline if y is within max_y distance:
             if stop_line_point.x < self.stop_distance.value and np.abs(stop_line_point.y) < self.max_y.value and not self.should_stop:
                 self.should_stop = True
-                rospy.Timer(rospy.Duration(0.4), self.cb_stop_timer, True)
 
             stop_line_reading_msg.at_stop_line = self.at_stop
 
@@ -119,15 +135,7 @@ class StopLineFilterNode(DTROS):
                 msg.header.stamp = stop_line_reading_msg.header.stamp
                 self.pub_at_stop_line.publish(msg)
 
-                #self.sleep = True
-                #rospy.sleep(1.2)
-
             self.pub_stop_line_reading.publish(stop_line_reading_msg)
-            #self.sleep = False
-
-    def cb_stop_timer(self, event):
-        self.at_stop = True
-        self.should_stop = False
 
     def to_lane_frame(self, point):
         p_homo = np.array([point.x, point.y, 1])
