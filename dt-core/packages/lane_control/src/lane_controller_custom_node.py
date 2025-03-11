@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import numpy as np
 import rospy
 
@@ -13,10 +14,11 @@ from duckietown_msgs.msg import (
     VehicleCorners,
 )
 from std_msgs.msg import String, Int8, Int16, Empty, Bool, Header
-
 from lane_controller.controller import LaneController
 
-from duckietown_msgs.msg import AprilTagDetectionArray, AprilTagDetection
+from dijkstra.components import Graph, Route
+from dijkstra.map import DUCKIETOWN_CITY
+from dijkstra import Dijkstra
 
 
 class LaneControllerNode(DTROS):
@@ -141,16 +143,20 @@ class LaneControllerNode(DTROS):
         #rospy.sleep(2)  # Wait for other nodes to start
         self.log("Initialized!")
 
-    def select_turn(self):
-        if self.followed_veh_turn is not None:
-            # If following a vehicle, then follow it's turn
-            return int(self.followed_veh_turn)
-        else:
-            # Take a random turn from the available turns (based on apriltag
-            # detection)
-            turn = self._available_turns()
-            #return int(np.random.choice(turn))
-            return 2
+        # Dijkstra implementation
+        graph = Graph()
+        graph.generate_from_map(DUCKIETOWN_CITY)
+
+        start_coordinates = (2, 0)
+        to_coordinates = (3, 5)
+        start = next((node for node in graph.nodes if node.coordinates == start_coordinates))
+        to = next((node for node in graph.nodes if node.coordinates == to_coordinates))
+        route = Route(start, to)
+
+        dijkstra = Dijkstra(graph)
+        self.path = dijkstra.get_shortest_path(route)
+        self.intersections = [i for i, val in enumerate(self.path) if val in {"3W", "4W"}]
+        self.intersection_number = 0
 
     def cb_turn_type(self, msg):
         self.turn_type = msg.data
@@ -301,8 +307,28 @@ class LaneControllerNode(DTROS):
             self.log("At stop line")
             self.at_stop_line = False
 
-            # Choose the turn
-            #turn = int(self.select_turn())
+            # Dijkstra implementation
+            def get_direction(current_node, intersection_node, next_node):
+                cur_x, cur_y = current_node.coordinates
+                inter_x, inter_y = intersection_node.coordinates
+                next_x, next_y = next_node.coordinates
+
+                if cur_x == next_x or cur_y == next_y:
+                    return "STRAIGHT"
+                elif cur_x == inter_x:
+                    if ((cur_y < next_y) and (cur_x > next_x)) or ((cur_x < next_x) and (cur_y > next_y)):
+                        return "RIGHT"
+                    else:
+                        return "LEFT"
+                elif cur_y == inter_y:
+                    if ((cur_x < next_x) and (cur_y < next_y)) or ((cur_y > next_y) and (cur_x > next_x)):
+                        return "RIGHT"
+                    else:
+                        return "LEFT"
+
+            location = self.intersections[self.intersection_index]
+            self.turn_type = get_direction(self.path[location-1], self.path[location], self.path[location+1])
+            self.intersection_index += 1
 
             self.log(f"Selecting turn: {self.turn_type}")
             self.execute_turn(self.turn_type)

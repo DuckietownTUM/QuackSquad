@@ -1,6 +1,6 @@
 from components.Graph import Graph
 from components.Route import Route
-from Map import DUCKIETOWN_CITY
+from map.Map import DUCKIETOWN_CITY
 from Dijkstra import Dijkstra
 
 
