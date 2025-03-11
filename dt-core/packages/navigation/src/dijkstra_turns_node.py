@@ -49,7 +49,9 @@ class DijkstraTurnsNode:
         self.path = dijkstra.get_shortest_path(route)
         self.intersections = [i for i, val in enumerate(self.path) if val.value.type.value in {"3W", "4W"}]
         self.intersection_index = 0
-        print(f"Path: {self.path}, intersections: {self.intersections}, intersection_index: {self.intersection_index}")
+
+        path_tiles = [tile.value.type.value for tile in self.path]
+        print(f"Path: {path_tiles}, intersections: {self.intersections}")
 
     def cbMode(self, mode_msg):
         self.fsm_mode = mode_msg.state
@@ -85,7 +87,8 @@ class DijkstraTurnsNode:
             
         self.pub_turn_type.publish(self.turn_type)
 
-        print(f"location: {location}, intersection_index: {self.intersection_index}, turn_type: {self.turn_type}")
+        direction = "STRAIGHT" if self.turn_type == 1 else "LEFT" if self.turn_type == 0 else "RIGHT"
+        print(f"{self.intersection_index}: at tile {location} go {direction}")
 
     def cbIntersectionDone(self, intersection_done_msg):
         self.intersection_index += 1
