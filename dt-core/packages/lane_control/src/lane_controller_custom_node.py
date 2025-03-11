@@ -16,11 +16,6 @@ from duckietown_msgs.msg import (
 from std_msgs.msg import String, Int8, Int16, Empty, Bool, Header
 from lane_controller.controller import LaneController
 
-from navigation.include.dijkstra.components.Graph import Graph
-from navigation.include.dijkstra.components.Route import Route
-from navigation.include.dijkstra.map.Map import DUCKIETOWN_CITY
-from navigation.include.dijkstra.Dijkstra import Dijkstra
-
 
 class LaneControllerNode(DTROS):
     """Computes control action.
@@ -137,7 +132,7 @@ class LaneControllerNode(DTROS):
         self.sub_wheels_cmd_executed = rospy.Subscriber("~wheels_cmd", WheelsCmdStamped, self.cb_wheels_cmd_executed, queue_size=1)
         self.sub_stop_line = rospy.Subscriber("~stop_line_reading", StopLineReading, self.cb_stop_line_reading, queue_size=1)
         self.sub_obstacle_stop_line = rospy.Subscriber("~obstacle_distance_reading", StopLineReading, self.cb_obstacle_stop_line_reading, queue_size=1)
-        self.sub_turn_type = rospy.Subscriber("intersection_navigation_node/turn_type", Int16, self.cb_turn_type)
+        self.sub_turn_type = rospy.Subscriber("dijkstra_turns_node/turn_type", Int16, self.cb_turn_type)
 
         # LED control service
         rospy.wait_for_service("/duckie/led_emitter_node/set_pattern", timeout=5)
@@ -145,22 +140,6 @@ class LaneControllerNode(DTROS):
 
         #rospy.sleep(2)  # Wait for other nodes to start
         self.log("Initialized!")
-
-        # Dijkstra implementation
-        graph = Graph()
-        graph.generate_from_map(DUCKIETOWN_CITY)
-
-        start_coordinates = (3, 0)
-        to_coordinates = (3, 5)
-        start = next((node for node in graph.nodes if node.coordinates == start_coordinates))
-        to = next((node for node in graph.nodes if node.coordinates == to_coordinates))
-        route = Route(start, to)
-
-        dijkstra = Dijkstra(graph)
-        self.path = dijkstra.get_shortest_path(route)
-        self.intersections = [i for i, val in enumerate(self.path) if val in {"3W", "4W"}]
-        self.intersection_number = 0
-        print(f"Path: {self.path}, intersection: {self.intersection}, intersection_number: {self.intersection_number}")
 
     def cb_turn_type(self, msg):
         self.turn_type = msg.data
@@ -313,30 +292,6 @@ class LaneControllerNode(DTROS):
         elif self.at_stop_line:
             self.log("At stop line")
             self.at_stop_line = False
-
-            # Dijkstra implementation
-            def get_direction(current_node, intersection_node, next_node):
-                cur_x, cur_y = current_node.coordinates
-                inter_x, inter_y = intersection_node.coordinates
-                next_x, next_y = next_node.coordinates
-
-                if cur_x == next_x or cur_y == next_y:
-                    return "STRAIGHT"
-                elif cur_x == inter_x:
-                    if ((cur_y < next_y) and (cur_x > next_x)) or ((cur_x < next_x) and (cur_y > next_y)):
-                        return "RIGHT"
-                    else:
-                        return "LEFT"
-                elif cur_y == inter_y:
-                    if ((cur_x < next_x) and (cur_y < next_y)) or ((cur_y > next_y) and (cur_x > next_x)):
-                        return "RIGHT"
-                    else:
-                        return "LEFT"
-
-            location = self.intersections[self.intersection_index]
-            self.turn_type = get_direction(self.path[location-1], self.path[location], self.path[location+1])
-            self.intersection_index += 1
-            print(f"location: {location}, intersection_index: {self.intersection_index}, turn_type: {self.turn_type}")
 
             self.is_turning = True
             self.log(f"Selecting turn: {self.turn_type}")
