@@ -193,7 +193,7 @@
             <!-- <remap from="lane_controller_node/obstacle_detected" to="obstacle_avoidance_node/obstacle_avoidance_active_flag" /> -->
             <remap from="lane_controller_node/stop_line_reading" to="stop_line_filter_node/stop_line_reading" />
             <remap from="wheels_driver_node/radius_limit" to="lane_controller_node/radius_limit" />
-            <include file="$(find lane_control)/launch/lane_controller_node.launch">
+            <include file="$(find lane_control)/launch/lane_controller_custom_node.launch">
                 <arg name="veh" value="$(arg veh)"/>
                 <arg name="param_file_name" value="$(arg param_file_name)"/>
             </include>
@@ -294,7 +294,6 @@
     <!-- Start LEDs Detection -->
     <group if="$(arg LED)">
         <!-- Detection -->
-        <!--
         <group if="$(arg /LED/detector)">
             <remap from="led_detector_node/image/compressed" to="camera_node/image/compressed"/>
             <include file="$(find led_detection)/launch/led_detection.launch">
@@ -303,7 +302,6 @@
                 <arg name="verbose" value = "1"/>
             </include>
         </group>
-        -->
 
         <!--remap from="led_joy_mapper_node/change_color_pattern" to="led_emitter_node/change_color_pattern" /-->
         <group if="$(arg /LED/joystick)">

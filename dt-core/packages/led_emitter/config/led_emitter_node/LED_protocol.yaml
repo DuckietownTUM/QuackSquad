@@ -10,6 +10,7 @@ LED_protocol:
     purple: [1,0,1]
     cyan: [0,1,1]
     pink: [1,0,0.5]
+    orange: [1,0.3,0]
 
   frequencies:
     f1: &f1 1.9
@@ -45,10 +46,28 @@ LED_protocol:
 
     CAR_DRIVING:
       color_mask: []
-      color_list: ["white","red","white","red","white"]
+      color_list: ["white","red","blue","red","white"]
       frequency_mask: []
       frequency:  0
 
+    HAZARD_WARNING_LIGHTS:
+      color_mak: []
+      color_list: "orange"
+      frequency_mask: [1,1,1,1,1]
+      frequency: *f1
+
+    CAR_SIGNAL_RIGHT:
+      color_mask: []
+      color_list: ["white","orange","blue","red","orange"]
+      frequency_mask: [0,1,0,0,1]
+      frequency: *f1
+
+    CAR_SIGNAL_LEFT:
+      color_mask: []
+      color_list: ["orange","red","blue","orange","white"]
+      frequency_mask: [1,0,0,1,0]
+      frequency: *f1
+  
     WHITE:
       color_mask: []
       color_list: "white"
@@ -72,10 +91,22 @@ LED_protocol:
       color_list: "blue"
       frequency_mask: []
       frequency:  0
+
+    PURPLE:
+      color_mask: []
+      color_list: "purple"
+      frequency_mask: []
+      frequency:  0
       
     YELLOW:
       color_mask: []
       color_list: "yellow"
+      frequency_mask: []
+      frequency:  0
+
+    ORANGE:
+      color_mask: []
+      color_list: "orange"
       frequency_mask: []
       frequency:  0
 
