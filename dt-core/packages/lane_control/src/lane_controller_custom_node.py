@@ -126,6 +126,7 @@ class LaneControllerNode(DTROS):
         # Construct publishers
         self.pub_car_cmd = rospy.Publisher("~car_cmd", Twist2DStamped, queue_size=1, dt_topic_type=TopicType.CONTROL)
         self.pub_wheels_cmd = rospy.Publisher("~wheels_cmd", WheelsCmdStamped, queue_size=1, dt_topic_type=TopicType.CONTROL)
+        self.pub_intersection_done = rospy.Publisher("~intersection_done", BoolStamped, queue_size=1)
 
         # Construct subscribers
         self.sub_lane_reading = rospy.Subscriber("~lane_pose", LanePose, self.cb_all_poses, "lane_filter", queue_size=1)
@@ -234,14 +235,14 @@ class LaneControllerNode(DTROS):
         self.pose_msg = pose_msg
 
     def execute_turn(self, turn_type):
-        if turn_type == 1:
-            return
-
         self.change_leds(self.led_signals[turn_type])
 
         # Wait at the stop line
         self.log(f"Sleeping for {self.stop_time.value} seconds")
         rospy.sleep(self.stop_time.value)
+
+        if turn_type == 1:
+            return
 
         # Construct turning command
         v, omega, sleep_time = self.turn_params[turn_type]
@@ -306,6 +307,11 @@ class LaneControllerNode(DTROS):
 
             self.log(f"Selecting turn: {self.turn_type}")
             self.execute_turn(1)
+            
+            done_msg = BoolStamped()
+            done_msg.header = Header()
+            done_msg.data = True
+            self.pub_intersection_done.publish(done_msg)
 
         else:  # Lane following
             # Compute errors
