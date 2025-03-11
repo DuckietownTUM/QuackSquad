@@ -3,7 +3,6 @@ import numpy as np
 import rospy
 
 from duckietown.dtros import DTROS, NodeType, TopicType, DTParam, ParamType
-from std_msgs.msg import Header
 from duckietown_msgs.msg import (
     Twist2DStamped,
     LanePose,
@@ -69,7 +68,7 @@ class LaneControllerNode(DTROS):
         #self.params["~theta_thres"] = rospy.get_param("~theta_thres", None)
         #Breaking up the self.params["~theta_thres"] parameter for more finer tuning of phi
         self.params["~theta_thres_min"] = DTParam("~theta_thres_min", param_type=ParamType.FLOAT, min_value=-100.0, max_value=100.0)  #SUGGESTION mandatorizing the use of DTParam inplace of rospy.get_param for parameters in the entire dt-core repository as it allows active tuning while Robot is in action.
-        self.params["~theta_thres_max"] = DTParam("~theta_thres_max", param_type=ParamType.FLOAT, min_value=-100.0, max_value=100.0)
+        self.params["~theta_thres_max"] = DTParam("~theta_thres_max", param_type=ParamType.FLOAT, min_value=-100.0, max_value=100.0) 
         self.params["~d_thres"] = rospy.get_param("~d_thres", None)
         self.params["~d_offset"] = rospy.get_param("~d_offset", None)
         self.params["~integral_bounds"] = rospy.get_param("~integral_bounds", None)
@@ -124,11 +123,7 @@ class LaneControllerNode(DTROS):
         self.sub_obstacle_stop_line = rospy.Subscriber(
             "~obstacle_distance_reading", StopLineReading, self.cbObstacleStopLineReading, queue_size=1
         )
-        self.pub_wheels_cmd = rospy.Publisher(
-            "~wheels_cmd", WheelsCmdStamped, queue_size=1, dt_topic_type=TopicType.CONTROL
-        )
 
-        #rospy.sleep(5) #To see if other nodes are initializing in the mean time
         self.log("Initialized!")
 
     def cbObstacleStopLineReading(self, msg):
@@ -140,7 +135,7 @@ class LaneControllerNode(DTROS):
         """
         self.obstacle_stop_line_distance = np.sqrt(msg.stop_line_point.x**2 + msg.stop_line_point.y**2)
         self.obstacle_stop_line_detected = msg.stop_line_detected
-        self.at_obstacle_stop_line = msg.at_stop_line
+        self.at_stop_line = msg.at_stop_line
 
     def cbStopLineReading(self, msg):
         """Callback storing current distance to the next stopline, if one is detected.
@@ -150,7 +145,7 @@ class LaneControllerNode(DTROS):
         """
         self.stop_line_distance = np.sqrt(msg.stop_line_point.x**2 + msg.stop_line_point.y**2)
         self.stop_line_detected = msg.stop_line_detected
-        self.at_stop_line = msg.at_stop_line
+        self.at_obstacle_stop_line = msg.at_stop_line
 
     def cbMode(self, fsm_state_msg):
 
@@ -261,17 +256,6 @@ class LaneControllerNode(DTROS):
 
         self.controller.update_parameters(self.params)
 
-    def on_shutdown(self):
-        rospy.sleep(0.5)
-
-        stop_msg = WheelsCmdStamped()
-        stop_msg.header = Header()
-        stop_msg.header.stamp = rospy.Time.now()
-        stop_msg.vel_left = 0.0
-        stop_msg.vel_right = 0.0
-        self.pub_wheels_cmd.publish(stop_msg)
-
-        rospy.loginfo("Published zero velocities to stop the Duckiebot.")
 
 if __name__ == "__main__":
     # Initialize the node

@@ -54,7 +54,6 @@ class FSMNode:
                 rospy.loginfo(f"FSM found service {service_name}")
             except rospy.ROSException as e:
                 rospy.logwarn(f"{e}")
-        print(self.srv_dict)
 
         # to change the LEDs
         self.changePattern = rospy.ServiceProxy("~set_pattern", ChangePattern)
