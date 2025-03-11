@@ -82,13 +82,13 @@ class DijkstraTurnsNode:
         if self.intersection_index < len(self.intersections):
             location = self.intersections[self.intersection_index]
             self.turn_type = get_direction(self.path[location - 1], self.path[location], self.path[location + 1])
+            direction = "STRAIGHT" if self.turn_type == 1 else "LEFT" if self.turn_type == 0 else "RIGHT"
+            print(f"{self.intersection_index}: at tile {location} go {direction}")
+
         else:
             self.turn_type = -1
             
         self.pub_turn_type.publish(self.turn_type)
-
-        direction = "STRAIGHT" if self.turn_type == 1 else "LEFT" if self.turn_type == 0 else "RIGHT"
-        print(f"{self.intersection_index}: at tile {location} go {direction}")
 
     def cbIntersectionDone(self, intersection_done_msg):
         self.intersection_index += 1
