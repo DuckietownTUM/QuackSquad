@@ -150,7 +150,7 @@ class LaneControllerNode(DTROS):
         graph = Graph()
         graph.generate_from_map(DUCKIETOWN_CITY)
 
-        start_coordinates = (2, 0)
+        start_coordinates = (3, 0)
         to_coordinates = (3, 5)
         start = next((node for node in graph.nodes if node.coordinates == start_coordinates))
         to = next((node for node in graph.nodes if node.coordinates == to_coordinates))
@@ -160,6 +160,7 @@ class LaneControllerNode(DTROS):
         self.path = dijkstra.get_shortest_path(route)
         self.intersections = [i for i, val in enumerate(self.path) if val in {"3W", "4W"}]
         self.intersection_number = 0
+        print(f"Path: {self.path}, intersection: {self.intersection}, intersection_number: {self.intersection_number}")
 
     def cb_turn_type(self, msg):
         self.turn_type = msg.data
@@ -335,6 +336,7 @@ class LaneControllerNode(DTROS):
             location = self.intersections[self.intersection_index]
             self.turn_type = get_direction(self.path[location-1], self.path[location], self.path[location+1])
             self.intersection_index += 1
+            print(f"location: {location}, intersection_index: {self.intersection_index}, turn_type: {self.turn_type}")
 
             self.is_turning = True
             self.log(f"Selecting turn: {self.turn_type}")
