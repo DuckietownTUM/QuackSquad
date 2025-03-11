@@ -47,7 +47,7 @@ class DijkstraTurnsNode:
 
         dijkstra = Dijkstra(graph)
         self.path = dijkstra.get_shortest_path(route)
-        self.intersections = [i for i, val in enumerate(self.path) if val in {"3W", "4W"}]
+        self.intersections = [i for i, val in enumerate(self.path) if val.value.type.value in {"3W", "4W"}]
         self.intersection_index = 0
         print(f"Path: {self.path}, intersections: {self.intersections}, intersection_index: {self.intersection_index}")
 
