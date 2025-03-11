@@ -65,17 +65,17 @@ class DijkstraTurnsNode:
             next_x, next_y = next_node.coordinates
 
             if cur_x == next_x or cur_y == next_y:
-                return "STRAIGHT"
+                return 1
             elif cur_x == inter_x:
                 if ((cur_y < next_y) and (cur_x > next_x)) or ((cur_x < next_x) and (cur_y > next_y)):
-                    return "RIGHT"
+                    return 2
                 else:
-                    return "LEFT"
+                    return 0
             elif cur_y == inter_y:
                 if ((cur_x < next_x) and (cur_y < next_y)) or ((cur_y > next_y) and (cur_x > next_x)):
-                    return "RIGHT"
+                    return 2
                 else:
-                    return "LEFT"
+                    return 0
 
         location = self.intersections[self.intersection_index]
         self.turn_type = get_direction(self.path[location - 1], self.path[location], self.path[location + 1])
