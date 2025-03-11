@@ -241,7 +241,7 @@ class LaneControllerNode(DTROS):
 
         # Wait at the stop line
         self.log(f"Sleeping for {self.stop_time.value} seconds")
-        rospy.sleep(self.stop_time.value)  # wait at stop line
+        rospy.sleep(self.stop_time.value)
 
         # Construct turning command
         v, omega, sleep_time = self.turn_params[turn_type]
@@ -267,8 +267,10 @@ class LaneControllerNode(DTROS):
         self.change_leds(String("CAR_DRIVING"))
 
     def drive(self):
+        #print(self.stop_line_distance)
         if self.drive_running:
             rospy.logfatal("drive is already running")
+            return
 
         self.drive_running = True
 
@@ -283,33 +285,34 @@ class LaneControllerNode(DTROS):
         if self.last_s is not None:
             dt = current_s - self.last_s
 
-        # Intersection navigation
-        if self.at_stop_line and not self.at_obstacle_stop_line:
-            self.at_stop_line = False
+        car_control_msg = Twist2DStamped()
+
+        # Stop
+        if self.at_stop_line or self.at_obstacle_stop_line:
+            car_control_msg.header = pose_msg.header
+            car_control_msg.v = 0
+            car_control_msg.omega = 0
+            self.publish_cmd(car_control_msg)
+
+        if self.at_obstacle_stop_line:
+            self.log("at obstacle stop line")
+
+        elif self.at_stop_line:
             self.log("At stop line")
+            self.at_stop_line = False
 
             # Choose the turn
             #turn = int(self.select_turn())
 
             self.log(f"Selecting turn: {self.turn_type}")
-            #while self.turn_type == -1:
-            #    continue
             self.execute_turn(self.turn_type)
 
-        if self.at_obstacle_stop_line:
-            self.log("at obstacle stop line")
-            v = 0
-            omega = 0
-
         else:  # Lane following
-
             # Compute errors
             d_err = pose_msg.d - self.params["~d_offset"].value
             phi_err = pose_msg.phi
 
             # We cap the error if it grows too large
-            d_err = np.clip(d_err, -self.params["~d_thres"].value, self.params["~d_thres"].value)
-
             if np.abs(d_err) > self.params["~d_thres"].value:
                 self.log("d_err too large, thresholding it!", "warn")
                 d_err = np.sign(d_err) * self.params["~d_thres"].value
@@ -328,20 +331,19 @@ class LaneControllerNode(DTROS):
                 omega = omega * 0.25
 
             else:
+                self.stop_line_distance = None
                 v, omega = self.controller.compute_control_action(d_err, phi_err, dt, wheels_cmd_exec, self.stop_line_distance)
 
             # For feedforward action (i.e. during intersection navigation)
             omega += self.params["~omega_ff"].value
 
-        # Initialize car control msg, add header from input message
-        car_control_msg = Twist2DStamped()
-        car_control_msg.header = pose_msg.header
+            # Initialize car control msg, add header from input message
+            car_control_msg.header = pose_msg.header
 
-        # Add commands to car message
-        car_control_msg.v = v
-        car_control_msg.omega = omega
-
-        self.publish_cmd(car_control_msg)
+            # Add commands to car message
+            car_control_msg.v = v
+            car_control_msg.omega = omega
+            self.publish_cmd(car_control_msg)
 
         # Set the current time stamp, needed for lane following
         # Important: this needs to be set whether we're doing lane following or
