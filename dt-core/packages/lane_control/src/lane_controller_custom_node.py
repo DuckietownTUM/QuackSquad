@@ -16,9 +16,10 @@ from duckietown_msgs.msg import (
 from std_msgs.msg import String, Int8, Int16, Empty, Bool, Header
 from lane_controller.controller import LaneController
 
-from dijkstra.components import Graph, Route
-from dijkstra.map import DUCKIETOWN_CITY
-from dijkstra import Dijkstra
+from navigation.include.dijkstra.components.Graph import Graph
+from navigation.include.dijkstra.components.Route import Route
+from navigation.include.dijkstra.map.Map import DUCKIETOWN_CITY
+from navigation.include.dijkstra.Dijkstra import Dijkstra
 
 
 class LaneControllerNode(DTROS):
