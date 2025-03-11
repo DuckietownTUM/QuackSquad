@@ -1,7 +1,6 @@
 from .Node import Node
 from .Edge import Edge
 
-
 class Graph:
     def __init__(self):
         self.nodes = []
@@ -38,17 +37,6 @@ class Graph:
                                     self.nodes.append(neighbor_node)
                                 edge = Edge(node, neighbor_node, 1)
                                 self.edges.append(edge)
-
-    # def get_all_tile_coordinates(self):
-    #     x_coords = []
-    #     y_coords = []
-    #
-    #     for node in self.nodes:
-    #         x, y = node.coordinate
-    #         x_coords.append(x)
-    #         y_coords.append(y)
-    #
-    #     return x_coords, y_coords
 
     def __str__(self):
         return f"Graph(nodes={self.nodes}, edges={self.edges})"

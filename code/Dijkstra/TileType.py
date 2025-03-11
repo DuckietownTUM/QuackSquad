@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class TileType(Enum):
     STRAIGHT = "ST"
     CURVE = "CU"
