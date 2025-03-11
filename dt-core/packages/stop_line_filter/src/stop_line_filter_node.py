@@ -41,9 +41,12 @@ class StopLineFilterNode(DTROS):
         self.pub_stop_line_reading = rospy.Publisher("~stop_line_reading", StopLineReading, queue_size=1)
         self.pub_at_stop_line = rospy.Publisher("~at_stop_line", BoolStamped, queue_size=1)
 
-        self.sub_intersection_done = rospy.Subscriber("lane_control/intersection_done", BoolStamped, self.cb_after_intersection)
+        self.sub_intersection_done = rospy.Subscriber("lane_controller_node/intersection_done", BoolStamped, self.cb_after_intersection)
 
-    def cb_after_intersection(self):
+    def cb_after_intersection(self, done_msg):
+        if not done_msg.data:
+            return
+
         self.loginfo("Blocking stop line detection after the intersection")
         stop_line_reading_msg = StopLineReading()
         stop_line_reading_msg.stop_line_detected = False
@@ -80,7 +83,7 @@ class StopLineFilterNode(DTROS):
             avg_x = 0.5 * (p1_lane[0] + p2_lane[0])
             avg_y = 0.5 * (p1_lane[1] + p2_lane[1])
             stop_line_x_accumulator += avg_x
-            debug_seg.append(f"{segment.points[0].x};{segment.points[1].x}")
+            debug_seg.append(f"{segment.points[0].y};{segment.points[1].y}")
             stop_line_y_accumulator += avg_y  # TODO output covariance and not just mean
             good_seg_count += 1.0
 
@@ -104,12 +107,12 @@ class StopLineFilterNode(DTROS):
             # Only detect redline if y is within max_y distance:
             if stop_line_point.x < self.stop_distance.value and np.abs(stop_line_point.y) < self.max_y.value and not self.should_stop:
                 self.should_stop = True
-                rospy.Timer(rospy.Duration(0.6), self.cb_stop_timer, True)
+                rospy.Timer(rospy.Duration(0.4), self.cb_stop_timer, True)
 
             stop_line_reading_msg.at_stop_line = self.at_stop
 
             #print(f"{stop_line_point.x < self.stop_distance.value} | {np.abs(stop_line_point.y) < self.max_y.value}")
-            #print(f"{stop_line_point.x}| {debug_seg}")
+            #print(f"{stop_line_point.y}| {debug_seg}")
 
             if stop_line_reading_msg.at_stop_line:
                 msg = BoolStamped()

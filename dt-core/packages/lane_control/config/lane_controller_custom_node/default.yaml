@@ -34,7 +34,7 @@ verbose: 0
 # Turns parameter
 l_turn_v: 0.3
 l_turn_omega: 2
-l_turn_secs: 1.2
+l_turn_secs: 1.85
 
 r_turn_v: 0.3
 r_turn_omega: -4.75

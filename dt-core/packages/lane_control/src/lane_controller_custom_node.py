@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import numpy as np
 import rospy
 
@@ -13,10 +14,7 @@ from duckietown_msgs.msg import (
     VehicleCorners,
 )
 from std_msgs.msg import String, Int8, Int16, Empty, Bool, Header
-
 from lane_controller.controller import LaneController
-
-from duckietown_msgs.msg import AprilTagDetectionArray, AprilTagDetection
 
 
 class LaneControllerNode(DTROS):
@@ -108,6 +106,7 @@ class LaneControllerNode(DTROS):
         self.prev_at_stop_line_time = None
         self.current_pose_source = "lane_filter"
         self.turn_type = -1
+        self.is_turning = False
 
         self.drive_running = False
 
@@ -133,7 +132,7 @@ class LaneControllerNode(DTROS):
         self.sub_wheels_cmd_executed = rospy.Subscriber("~wheels_cmd", WheelsCmdStamped, self.cb_wheels_cmd_executed, queue_size=1)
         self.sub_stop_line = rospy.Subscriber("~stop_line_reading", StopLineReading, self.cb_stop_line_reading, queue_size=1)
         self.sub_obstacle_stop_line = rospy.Subscriber("~obstacle_distance_reading", StopLineReading, self.cb_obstacle_stop_line_reading, queue_size=1)
-        self.sub_turn_type = rospy.Subscriber("intersection_navigation_node/turn_type", Int16, self.cb_turn_type)
+        self.sub_turn_type = rospy.Subscriber("dijkstra_turns_node/turn_type_d", Int16, self.cb_turn_type)
 
         # LED control service
         rospy.wait_for_service("/duckie/led_emitter_node/set_pattern", timeout=5)
@@ -141,17 +140,6 @@ class LaneControllerNode(DTROS):
 
         #rospy.sleep(2)  # Wait for other nodes to start
         self.log("Initialized!")
-
-    def select_turn(self):
-        if self.followed_veh_turn is not None:
-            # If following a vehicle, then follow it's turn
-            return int(self.followed_veh_turn)
-        else:
-            # Take a random turn from the available turns (based on apriltag
-            # detection)
-            turn = self._available_turns()
-            #return int(np.random.choice(turn))
-            return 2
 
     def cb_turn_type(self, msg):
         self.turn_type = msg.data
@@ -173,6 +161,9 @@ class LaneControllerNode(DTROS):
         Args:
             msg (:obj:`StopLineReading`): Message containing information about the next stop line.
         """
+        if self.is_turning:
+            return
+
         # Only stop at stop lines at minimum s second intervals
         if msg.stop_line_detected:
             self.stop_line_distance = np.sqrt(msg.stop_line_point.x**2 + msg.stop_line_point.y**2)
@@ -302,16 +293,15 @@ class LaneControllerNode(DTROS):
             self.log("At stop line")
             self.at_stop_line = False
 
-            # Choose the turn
-            #turn = int(self.select_turn())
-
+            self.is_turning = True
             self.log(f"Selecting turn: {self.turn_type}")
-            self.execute_turn(1)
-            
+            self.execute_turn(self.turn_type)
+
             done_msg = BoolStamped()
             done_msg.header = Header()
             done_msg.data = True
             self.pub_intersection_done.publish(done_msg)
+            self.is_turning = False
 
         else:  # Lane following
             # Compute errors

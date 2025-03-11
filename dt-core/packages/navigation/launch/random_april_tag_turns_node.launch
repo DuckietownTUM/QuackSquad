@@ -10,7 +10,8 @@
         <node  name="$(arg node_name)" pkg="$(arg pkg_name)" type="$(arg node_name).py" output="screen" required="true">
             <rosparam command="load" file="$(find navigation)/config/$(arg node_name)/$(arg param_file_name).yaml"/>
         </node>
-
+        <node name="dijkstra_turns_node" pkg="$(arg pkg_name)" type="dijkstra_turns_node.py" output="screen" required="true">
+        </node>
     </group>
 
     <!-- Publications -->
