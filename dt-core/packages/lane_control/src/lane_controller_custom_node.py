@@ -305,7 +305,7 @@ class LaneControllerNode(DTROS):
             #turn = int(self.select_turn())
 
             self.log(f"Selecting turn: {self.turn_type}")
-            self.execute_turn(self.turn_type)
+            self.execute_turn(1)
 
         else:  # Lane following
             # Compute errors
