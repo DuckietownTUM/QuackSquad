@@ -126,6 +126,7 @@ class LaneControllerNode(DTROS):
         self.pub_car_cmd = rospy.Publisher("~car_cmd", Twist2DStamped, queue_size=1, dt_topic_type=TopicType.CONTROL)
         self.pub_wheels_cmd = rospy.Publisher("~wheels_cmd", WheelsCmdStamped, queue_size=1, dt_topic_type=TopicType.CONTROL)
         self.pub_intersection_done = rospy.Publisher("~intersection_done", BoolStamped, queue_size=1)
+        self.pub_idle_mode = rospy.Publisher("/duckie/joy_mapper_node/idle_mode", BoolStamped, queue_size=1)
 
         # Construct subscribers
         self.sub_lane_reading = rospy.Subscriber("~lane_pose", LanePose, self.cb_all_poses, "lane_filter", queue_size=1)
@@ -142,6 +143,10 @@ class LaneControllerNode(DTROS):
         self.log("Initialized!")
 
     def cb_turn_type(self, msg):
+        if msg.data == -1:
+            self.pub_idle_mode.publish(True)
+            rospy.sleep(3)  #stop the node for the transition time
+
         self.turn_type = msg.data
 
     def cb_obstacle_stop_line_reading(self, msg):

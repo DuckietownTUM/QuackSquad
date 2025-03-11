@@ -76,15 +76,20 @@ class DijkstraTurnsNode:
                     return 2
                 else:
                     return 0
-
-        location = self.intersections[self.intersection_index]
-        self.turn_type = get_direction(self.path[location - 1], self.path[location], self.path[location + 1])
+                
+        if self.intersection_index < len(self.intersections):
+            location = self.intersections[self.intersection_index]
+            self.turn_type = get_direction(self.path[location - 1], self.path[location], self.path[location + 1])
+        else:
+            self.turn_type = -1
+            
         self.pub_turn_type.publish(self.turn_type)
 
         print(f"location: {location}, intersection_index: {self.intersection_index}, turn_type: {self.turn_type}")
 
     def cbIntersectionDone(self, intersection_done_msg):
         self.intersection_index += 1
+
 
     def setupParameter(self, param_name, default_value):
         value = rospy.get_param(param_name, default_value)
