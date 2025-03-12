@@ -291,7 +291,7 @@ class LaneControllerNode(DTROS):
             self.at_stop_line = False
 
             self.log(f"Selecting turn: {self.turn_type}")
-            self.execute_turn(self.turn_type)
+            self.execute_turn(0)
 
             done_msg = BoolStamped()
             done_msg.header = Header()
