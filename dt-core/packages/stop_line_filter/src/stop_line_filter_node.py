@@ -43,12 +43,15 @@ class StopLineFilterNode(DTROS):
             self.prev_dist = dist_msg.data
 
         elif self.should_stop and not self.at_stop:
-            if dist_msg.data - self.prev_dist >= self.should_stop_dist - 0.08: #stop_distance is from the center of the bot
+            #DEBUG print(dist_msg.data - self.prev_dist + 0.2 >= self.should_stop_dist.value + self.stop_dist.value)
+            if dist_msg.data - self.prev_dist + 0.2 >= self.should_stop_dist.value + self.stop_dist.value: #stop_distance is from the center of the bot
                 self.at_stop = True
                 self.prev_dist  = dist_msg.data
 
         else:
-            if dist_msg.data > self.prev_dist + 0.02:
+            print(f"{dist_msg.data} | {self.prev_dist + 0.1}")
+            if dist_msg.data > self.prev_dist + 0.1:
+                print("put stop filter node to sleep")
                 self.at_stop = False
                 self.should_stop = False
 
@@ -117,11 +120,12 @@ class StopLineFilterNode(DTROS):
             stop_line_point.y = stop_line_y_accumulator / good_seg_count
             stop_line_reading_msg.stop_line_point = stop_line_point
 
-            print(f"{stop_line_point.y >= self.min_y.value}|{stop_line_point.x}")
+            #DEBUG print(f"{stop_line_point.y >= self.min_y.value}|{stop_line_point.x}")
             if stop_line_point.x < self.should_stop_dist.value and stop_line_point.y >= self.min_y.value and not self.should_stop:
                 print("Should stop")
                 self.should_stop = True
 
+            print(self.at_stop)
             stop_line_reading_msg.at_stop_line = self.at_stop
 
             #DEBUG print(f"{stop_line_point.x < self.stop_distance.value} | {np.abs(stop_line_point.y) < self.max_y.value}")
