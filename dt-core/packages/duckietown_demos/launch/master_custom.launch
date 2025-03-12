@@ -74,6 +74,8 @@
     <arg name="statistics" default="false"/>
     <arg name="enable_statistics" default="$(arg statistics)"/>
     <arg name="maintenance_control" default="false"/>
+
+    <arg name="dijkstra" default="false"/>
     <!-- end switch args -->
 
 
