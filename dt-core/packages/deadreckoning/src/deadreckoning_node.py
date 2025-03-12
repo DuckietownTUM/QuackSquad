@@ -119,7 +119,7 @@ class DeadReckoningNode(DTROS):
         dtl = left_encoder.header.stamp - self.left_encoder_last.header.stamp
         dtr = right_encoder.header.stamp - self.right_encoder_last.header.stamp
         if dtl.to_sec() < 0 or dtr.to_sec() < 0:
-            self.loginfo("Ignoring stale encoder message")
+            # self.loginfo("Ignoring stale encoder message")
             return
 
         left_dticks = left_encoder.data - self.left_encoder_last.data

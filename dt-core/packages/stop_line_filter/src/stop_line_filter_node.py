@@ -39,9 +39,11 @@ class StopLineFilterNode(DTROS):
         self.pub_at_stop_line = rospy.Publisher("~at_stop_line", BoolStamped, queue_size=1)
 
     def delay_stop(self):
-        if self.total_dist - self.prev_dist < self.should_stop_dist - 0.1:
+        print(self.total_dist - self.prev_dist)
+        if self.total_dist - self.prev_dist < self.should_stop_dist.value - 0.2:
             return
-        
+
+        print("STOP")
         stop_line_reading_msg = StopLineReading()
         stop_line_reading_msg.stop_line_detected = True
         stop_line_reading_msg.at_stop_line = True
@@ -63,6 +65,7 @@ class StopLineFilterNode(DTROS):
 
         rospy.sleep(self.off_time.value)
         self.sleep = False
+        self.at_stop = False
 
         self.loginfo("Resuming stop line detection after the intersection")
 
@@ -115,8 +118,8 @@ class StopLineFilterNode(DTROS):
             stop_line_point.y = stop_line_y_accumulator / good_seg_count
             stop_line_reading_msg.stop_line_point = stop_line_point
 
-            #DEBUG print(f"{stop_line_point.y >= self.min_y.value}|{stop_line_point.x}")
-            if stop_line_point.x < self.should_stop_dist.value and stop_line_point.y >= self.min_y.value and not self.should_stop:
+            #DEBUG print(f"{stop_line_point.y}|{self.min_y.value}|{stop_line_point.x}")
+            if stop_line_point.x < self.should_stop_dist.value and stop_line_point.y < 0.15 and not self.should_stop:
                 print("Should stop")
                 self.should_stop = True
                 self.prev_dist = self.total_dist

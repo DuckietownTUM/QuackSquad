@@ -147,8 +147,8 @@ class LaneControllerNode(DTROS):
             idle_msg = BoolStamped()
             idle_msg.header = Header()
             idle_msg.data = True
-            self.pub_idle_mode.publish(idle_msg)
-            rospy.sleep(3)  #stop the node for the transition time
+            #self.pub_idle_mode.publish(idle_msg)
+            #rospy.sleep(3)  #stop the node for the transition time
 
         self.turn_type = msg.data
 
@@ -171,9 +171,9 @@ class LaneControllerNode(DTROS):
         """
 
         # Only stop at stop lines at minimum s second intervals
-        if msg.at_stop_line and self.prev_at_stop_line_time is not None:
-            if msg.header.stamp.to_sec() - self.prev_at_stop_line_time.to_sec() < 2:
-                    return
+        #if msg.at_stop_line and self.prev_at_stop_line_time is not None:
+        #    if msg.header.stamp.to_sec() - self.prev_at_stop_line_time.to_sec() < 2:
+        #            return
 
         self.at_stop_line = msg.at_stop_line
         print(msg.at_stop_line)
@@ -292,7 +292,7 @@ class LaneControllerNode(DTROS):
             self.at_stop_line = False
 
             self.log(f"Selecting turn: {self.turn_type}")
-            self.execute_turn(1)
+            self.execute_turn(self.turn_type)
 
             done_msg = BoolStamped()
             done_msg.header = Header()
