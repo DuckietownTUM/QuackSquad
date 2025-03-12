@@ -2,7 +2,7 @@
 
 # ======= GENERAL PARAMETERS =======
 
-v_bar: 0.25        # Base speed of the robot. Increasing this makes it move faster.
+v_bar: 0.18        # Base speed of the robot. Increasing this makes it move faster.
 k_d: -4.5          # Gain for lateral position correction (should be <= 0).
 k_theta: -6.25     # Gain for heading correction (should be <= 0).
 k_Id: -0.5         # Integral gain for lateral position correction (should be <= 0). Helps reduce steady-state error.
