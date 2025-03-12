@@ -27,6 +27,7 @@ class StopLineFilterNode(DTROS):
         self.delta_dist = 0
         self.prev_dist = 0
         self.total_dist = 0
+        self.trigger_dist = 0
 
         # Subscribers
         self.sub_segs = rospy.Subscriber("~segment_list", SegmentList, self.cb_segments)
@@ -39,8 +40,7 @@ class StopLineFilterNode(DTROS):
         self.pub_at_stop_line = rospy.Publisher("~at_stop_line", BoolStamped, queue_size=1)
 
     def delay_stop(self):
-        print(self.total_dist - self.prev_dist)
-        if self.total_dist - self.prev_dist < self.should_stop_dist.value - 0.2:
+        if self.total_dist - self.prev_dist < self.trigger_dist - 0.1:
             return
 
         print("STOP")
@@ -123,6 +123,7 @@ class StopLineFilterNode(DTROS):
                 print("Should stop")
                 self.should_stop = True
                 self.prev_dist = self.total_dist
+                self.trigger_dist
 
             #print(self.at_stop)
             stop_line_reading_msg.at_stop_line = self.at_stop
