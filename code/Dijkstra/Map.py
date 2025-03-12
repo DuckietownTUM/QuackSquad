@@ -1,5 +1,4 @@
 from typing import List
-
 from Tile import Tile
 from TileType import TileType
 

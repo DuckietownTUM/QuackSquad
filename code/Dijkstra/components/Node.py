@@ -1,7 +1,7 @@
 class Node:
-    def __init__(self, id, coordinate, value):
+    def __init__(self, id, coordinates, value):
         self.id = id
-        self.coordinate = coordinate
+        self.coordinates = coordinates
         self.value = value
 
     def __eq__(self, other):
@@ -11,7 +11,7 @@ class Node:
         return hash(self.value)
 
     def __str__(self):
-        return f"Node(id={self.id}, coordinate={self.coordinate}, value={self.value})"
+        return f"Node(id={self.id}, coordinates={self.coordinates}, value={self.value})"
 
     def __repr__(self):
         return self.__str__()
