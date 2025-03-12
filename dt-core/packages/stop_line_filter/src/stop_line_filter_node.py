@@ -43,7 +43,7 @@ class StopLineFilterNode(DTROS):
             self.prev_dist = dist_msg.data
 
         elif self.should_stop and not self.at_stop:
-            #DEBUG print(dist_msg.data - self.prev_dist + 0.2 >= self.should_stop_dist.value + self.stop_dist.value)
+            print(dist_msg.data - self.prev_dist)
             if dist_msg.data - self.prev_dist >= 0: #stop_distance is from the center of the bot
                 self.at_stop = True
                 self.prev_dist  = dist_msg.data
