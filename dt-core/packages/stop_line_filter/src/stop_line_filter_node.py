@@ -26,6 +26,7 @@ class StopLineFilterNode(DTROS):
         self.at_stop = False
         self.delta_dist = 0
         self.prev_dist = 0
+        self.total_dist = 0
 
         # Subscribers
         self.sub_segs = rospy.Subscriber("~segment_list", SegmentList, self.cb_segments)
@@ -34,33 +35,27 @@ class StopLineFilterNode(DTROS):
         self.sub_intersection_done = rospy.Subscriber("lane_controller_node/intersection_done", BoolStamped, self.cb_after_intersection)
 
         # Publishers
-        self.pub_stop_line_reading = rospy.Publisher("~stop_line_reading", StopLineReading, queue_size=5)
-        self.pub_at_stop_line = rospy.Publisher("~at_stop_line", BoolStamped, queue_size=5)
+        self.pub_stop_line_reading = rospy.Publisher("~stop_line_reading", StopLineReading, queue_size=1)
+        self.pub_at_stop_line = rospy.Publisher("~at_stop_line", BoolStamped, queue_size=1)
 
+    def delay_stop(self):
+        if self.total_dist - self.prev_dist < self.should_stop_dist - 0.1:
+            return
+        
+        stop_line_reading_msg = StopLineReading()
+        stop_line_reading_msg.stop_line_detected = True
+        stop_line_reading_msg.at_stop_line = True
+        self.pub_stop_line_reading.publish(stop_line_reading_msg)
+
+        self.at_stop = True
+        self.should_stop = False
+        self.sleep = True
 
     def cb_total_dist(self, dist_msg):
-        if not self.should_stop and not self.at_stop:
-            self.prev_dist = dist_msg.data
+        self.total_dist = dist_msg.data
 
-        elif self.should_stop and not self.at_stop:
-            print(dist_msg.data - self.prev_dist)
-            if dist_msg.data - self.prev_dist >= 0: #stop_distance is from the center of the bot
-                self.at_stop = True
-                self.prev_dist  = dist_msg.data
-
-        #else:
-            #print(f"{dist_msg.data} | {self.prev_dist + 0.1}")
-            #if dist_msg.data > self.prev_dist + 0.1:
-                #print("put stop filter node to sleep")
-                #self.at_stop = False
-                #self.should_stop = False
-
-                #stop_line_reading_msg = StopLineReading()
-                #stop_line_reading_msg.stop_line_detected = False
-                #stop_line_reading_msg.at_stop_line = False
-                #self.pub_stop_line_reading.publish(stop_line_reading_msg)
-
-                #self.sleep = True
+        if self.should_stop:
+            self.delay_stop()
 
     def cb_after_intersection(self, done_msg):
         if not done_msg.data:
@@ -124,6 +119,7 @@ class StopLineFilterNode(DTROS):
             if stop_line_point.x < self.should_stop_dist.value and stop_line_point.y >= self.min_y.value and not self.should_stop:
                 print("Should stop")
                 self.should_stop = True
+                self.prev_dist = self.total_dist
 
             #print(self.at_stop)
             stop_line_reading_msg.at_stop_line = self.at_stop
