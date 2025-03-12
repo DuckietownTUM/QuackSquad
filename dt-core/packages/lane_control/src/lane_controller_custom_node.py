@@ -211,9 +211,6 @@ class LaneControllerNode(DTROS):
     def cb_total_dist(self, dist_msg):
         self.total_dist = dist_msg.data
 
-        # if self.turn_dist is not None:
-        #     self.dist_in_turns()
-
     def publish_cmd(self, car_cmd_msg):
         """Publishes a car command message.
 
@@ -274,6 +271,7 @@ class LaneControllerNode(DTROS):
         self.publish_cmd(car_control_msg)
     
     def at_intersection(self):
+        self.at_stop_line = False
         self.log("At stop line")
 
         self.log(f"Selecting turn: {self.turn_type}")
@@ -300,9 +298,11 @@ class LaneControllerNode(DTROS):
         self.publish_cmd(car_control_msg)
         self.log("Turning now")
         self.is_turning = True
-        self.at_stop_line = False
 
     def turns(self):
+        if self.dist_when_stopped is None:
+            return
+        
         if self.total_dist - self.dist_when_stopped < self.dist_turn:
             return
         
@@ -315,6 +315,7 @@ class LaneControllerNode(DTROS):
         self.publish_cmd(car_stop_msg)
         self.log("Stopping turn")
         self.is_turning = False
+        self.dist_when_stopped = None
 
         self.change_leds(String("CAR_DRIVING"))
 
