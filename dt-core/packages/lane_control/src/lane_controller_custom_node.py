@@ -133,7 +133,7 @@ class LaneControllerNode(DTROS):
         self.sub_wheels_cmd_executed = rospy.Subscriber("~wheels_cmd", WheelsCmdStamped, self.cb_wheels_cmd_executed, queue_size=1)
         self.sub_stop_line = rospy.Subscriber("~stop_line_reading", StopLineReading, self.cb_stop_line_reading, queue_size=1)
         self.sub_obstacle_stop_line = rospy.Subscriber("~obstacle_distance_reading", StopLineReading, self.cb_obstacle_stop_line_reading, queue_size=1)
-        self.sub_turn_type = rospy.Subscriber("dijkstra_turns_node/turn_type_d", Int16, self.cb_turn_type)
+        self.sub_turn_type = rospy.Subscriber("dijkstra_turns_node/turn_type", Int16, self.cb_turn_type)
 
         # LED control service
         rospy.wait_for_service("/duckie/led_emitter_node/set_pattern", timeout=5)

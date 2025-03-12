@@ -22,7 +22,7 @@ class DijkstraTurnsNode:
         rospy.loginfo(f"[{self.node_name}] Initializing.")
 
         # Setup publishers
-        self.pub_turn_type = rospy.Publisher("~turn_type_d", Int16, queue_size=1, latch=True)
+        self.pub_turn_type = rospy.Publisher("~turn_type", Int16, queue_size=1, latch=True)
 
         # Setup subscribers
         self.sub_topic_mode = rospy.Subscriber("~mode", FSMState, self.cbMode, queue_size=1)
