@@ -176,6 +176,7 @@ class LaneControllerNode(DTROS):
                     return
 
         self.at_stop_line = msg.at_stop_line
+        print(msg.at_stop_line)
         self.prev_at_stop_line_time = msg.header.stamp
 
     def cb_all_poses(self, input_pose_msg, pose_source):
