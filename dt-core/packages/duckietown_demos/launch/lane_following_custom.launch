@@ -35,8 +35,11 @@
 	    <arg name="/LED/emitter" value="true"/>
 
 		<!-- April Tags -->
-		<arg name="apriltags" value="true" />
-		<arg name="apriltags_random" value="true" />
+		<!-- <arg name="apriltags" value="true" /> -->
+		<!-- <arg name="apriltags_random" value="true" /> -->
+
+		<!-- Dijkstra -->
+		<arg name="dijkstra" value="true" />
 
   	</include>
 

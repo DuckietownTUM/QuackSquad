@@ -6,10 +6,10 @@ import rospy
 from duckietown_msgs.msg import FSMState, BoolStamped
 from std_msgs.msg import Int16
 
-from dijkstra.components.Graph import Graph
-from dijkstra.components.Route import Route
-from dijkstra.map.Map import DUCKIETOWN_CITY
-from dijkstra.Dijkstra import Dijkstra
+from dijkstra_utils.components.Graph import Graph
+from dijkstra_utils.components.Route import Route
+from dijkstra_utils.map.Map import DUCKIETOWN_CITY
+from dijkstra_utils.Dijkstra import Dijkstra
 
 
 class DijkstraTurnsNode:
