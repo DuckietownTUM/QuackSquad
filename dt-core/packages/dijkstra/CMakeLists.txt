@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(dijkstra)
+project(dijkstra VERSION 1.0.0)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
