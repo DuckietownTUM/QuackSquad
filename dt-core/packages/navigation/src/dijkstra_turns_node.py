@@ -83,7 +83,7 @@ class DijkstraTurnsNode:
             location = self.intersections[self.intersection_index]
             self.turn_type = get_direction(self.path[location - 1], self.path[location], self.path[location + 1])
             direction = "STRAIGHT" if self.turn_type == 1 else "LEFT" if self.turn_type == 0 else "RIGHT"
-            print(f"{self.intersection_index}: at tile {location} go {direction}")
+            #print(f"{self.intersection_index}: at tile {location} go {direction}")
 
         else:
             self.turn_type = -1

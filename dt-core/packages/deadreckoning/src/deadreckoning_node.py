@@ -207,7 +207,8 @@ class DeadReckoningNode(DTROS):
         odom.twist.twist = Twist(Vector3(self.tv, 0.0, 0.0), Vector3(0.0, 0.0, self.rv))
 
         self.pub.publish(odom)
-        self.pub_total_dist.publish(self.total_distance)
+        #print(self.total_dist)
+        self.pub_total_dist.publish(self.total_dist)
 
         self._tf_broadcaster.sendTransform(
             TransformStamped(

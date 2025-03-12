@@ -228,7 +228,7 @@ class LaneControllerNode(DTROS):
         # Wait at the stop line
         self.log(f"Sleeping for {self.stop_time.value} seconds")
         rospy.sleep(self.stop_time.value)
-        
+
         if turn_type == 1:
             return
 
@@ -291,7 +291,7 @@ class LaneControllerNode(DTROS):
             self.at_stop_line = False
 
             self.log(f"Selecting turn: {self.turn_type}")
-            self.execute_turn(self.turn_type)
+            self.execute_turn(1)
 
             done_msg = BoolStamped()
             done_msg.header = Header()

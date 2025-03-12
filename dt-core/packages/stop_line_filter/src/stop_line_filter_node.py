@@ -17,7 +17,7 @@ class StopLineFilterNode(DTROS):
         self.stop_dist = DTParam("~stop_dist", param_type=ParamType.FLOAT)
         self.min_segs = DTParam("~min_segs", param_type=ParamType.INT)
         self.off_time = DTParam("~off_time", param_type=ParamType.FLOAT)
-        self.min_y = DTParam("~max_y", param_type=ParamType.FLOAT)
+        self.min_y = DTParam("~min_y", param_type=ParamType.FLOAT)
 
         # state vars
         self.lane_pose = LanePose()
@@ -32,7 +32,7 @@ class StopLineFilterNode(DTROS):
         self.sub_lane = rospy.Subscriber("~lane_pose", LanePose, self.cb_lane_pose)
         self.sub_total_dist = rospy.Subscriber("deadreckoning_node/total_dist", Float32, self.cb_total_dist)
         self.sub_intersection_done = rospy.Subscriber("lane_controller_node/intersection_done", BoolStamped, self.cb_after_intersection)
-        
+
         # Publishers
         self.pub_stop_line_reading = rospy.Publisher("~stop_line_reading", StopLineReading, queue_size=1)
         self.pub_at_stop_line = rospy.Publisher("~at_stop_line", BoolStamped, queue_size=1)
@@ -57,7 +57,7 @@ class StopLineFilterNode(DTROS):
                 stop_line_reading_msg.at_stop_line = False
                 self.pub_stop_line_reading.publish(stop_line_reading_msg)
 
-                self.sleep = True 
+                self.sleep = True
 
     def cb_after_intersection(self, done_msg):
         if not done_msg.data:
@@ -117,7 +117,9 @@ class StopLineFilterNode(DTROS):
             stop_line_point.y = stop_line_y_accumulator / good_seg_count
             stop_line_reading_msg.stop_line_point = stop_line_point
 
+            print(f"{stop_line_point.y >= self.min_y.value}|{stop_line_point.x}")
             if stop_line_point.x < self.should_stop_dist.value and stop_line_point.y >= self.min_y.value and not self.should_stop:
+                print("Should stop")
                 self.should_stop = True
 
             stop_line_reading_msg.at_stop_line = self.at_stop
