@@ -55,4 +55,4 @@ We’re actively developing this project—stay tuned for updates.
 
 ---
 
-🌟 **Happy Navigating! Quack!** 🦆🚗✨
+🌟 **Happy Navigation! Quack!** 🦆🚗✨
