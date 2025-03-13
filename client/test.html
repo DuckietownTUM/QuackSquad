@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Duckiebot Web Control</title>
+	<script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+	<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-900 flex flex-col items-center justify-center min-h-screen">
+
+	<h1 class="text-3xl font-bold mb-4">🚀 Duckiebot Web Control</h1>
+
+	<div class="bg-white shadow-lg rounded-lg p-6 w-full max-w-md text-center">
+		<p class="text-lg mb-2">Status: <span id="status" class="font-semibold text-red-600">Disconnected</span></p>
+
+		<button onclick="connectROS()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
+			Connect to Duckiebot
+		</button>
+
+		<div class="mt-4">
+			<input id="messageInput" type="text" placeholder="Enter message" class="border p-2 rounded w-full mb-2">
+			<button onclick="sendMessage()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700">
+				Send Message
+			</button>
+		</div>
+
+		<h2 class="text-xl font-semibold mt-4">📩 Received Messages:</h2>
+		<ul id="messagesList" class="text-left mt-2"></ul>
+	</div>
+
+	<script>
+		let ros;
+		let topic;
+
+		function connectROS() {
+			ros = new ROSLIB.Ros({
+				url: "ws://duckie.local:9090"
+			});
+
+			ros.on("connection", function () {
+				document.getElementById("status").textContent = "Connected";
+				document.getElementById("status").classList.remove("text-red-600");
+				document.getElementById("status").classList.add("text-green-600");
+
+				topic = new ROSLIB.Topic({
+					ros: ros,
+					name: "/web_app/hello",
+					messageType: "std_msgs/String"
+				});
+
+				topic.subscribe(function (message) {
+					let list = document.getElementById("messagesList");
+					let li = document.createElement("li");
+					li.textContent = message.data;
+					list.appendChild(li);
+				});
+			});
+
+			ros.on("error", function () {
+				document.getElementById("status").textContent = "Error Connecting";
+				document.getElementById("status").classList.remove("text-green-600");
+				document.getElementById("status").classList.add("text-red-600");
+			});
+
+			ros.on("close", function () {
+				document.getElementById("status").textContent = "Disconnected";
+				document.getElementById("status").classList.remove("text-green-600");
+				document.getElementById("status").classList.add("text-red-600");
+			});
+		}
+
+		function sendMessage() {
+			let messageText = document.getElementById("messageInput").value;
+			if (!messageText) return;
+
+			let message = new ROSLIB.Message({ data: messageText });
+			topic.publish(message);
+
+			document.getElementById("messageInput").value = ""; // Clear input
+		}
+	</script>
+</body>
+
+</html>

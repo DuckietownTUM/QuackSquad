@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Duckiebot Camera Viewer</title>
+	<script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+	<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-900 flex flex-col items-center justify-center min-h-screen">
+
+	<h1 class="text-3xl font-bold mb-4">📷 Duckiebot Camera Viewer</h1>
+
+	<div class="bg-white shadow-lg rounded-lg p-6 w-full max-w-md text-center">
+		<p class="text-lg mb-2">Status: <span id="status" class="font-semibold text-red-600">Disconnected</span></p>
+		<button onclick="connectROS()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
+			Connect to Duckiebot
+		</button>
+
+		<h2 class="text-xl font-semibold mt-4">Live Camera Feed:</h2>
+		<img id="cameraFeed" class="w-full rounded-lg shadow-lg mt-2" src="" alt="Waiting for camera feed..." />
+	</div>
+
+	<script>
+		let ros;
+		let cameraTopic;
+
+		function connectROS() {
+			ros = new ROSLIB.Ros({
+				url: "ws://duckie.local:9090"
+			});
+
+			ros.on("connection", function () {
+				document.getElementById("status").textContent = "Connected";
+				document.getElementById("status").classList.remove("text-red-600");
+				document.getElementById("status").classList.add("text-green-600");
+
+				// Subscribe to the camera topic
+				cameraTopic = new ROSLIB.Topic({
+					ros: ros,
+					name: "/camera_node/image/compressed",
+					messageType: "sensor_msgs/CompressedImage"
+				});
+
+				cameraTopic.subscribe(function (message) {
+					let imgElement = document.getElementById("cameraFeed");
+					imgElement.src = "data:image/jpeg;base64," + message.data;
+				});
+			});
+
+			ros.on("error", function () {
+				document.getElementById("status").textContent = "Error Connecting";
+				document.getElementById("status").classList.remove("text-green-600");
+				document.getElementById("status").classList.add("text-red-600");
+			});
+
+			ros.on("close", function () {
+				document.getElementById("status").textContent = "Disconnected";
+				document.getElementById("status").classList.remove("text-green-600");
+				document.getElementById("status").classList.add("text-red-600");
+			});
+		}
+	</script>
+</body>
+
+</html>
