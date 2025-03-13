@@ -124,15 +124,15 @@ LED_protocol:
 
     OBSTACLE_ALERT:
       color_mask: []
-      color_list: ["white","yellow","white","yellow","white"]
-      frequency_mask: [0,1,0,1,0]
+      color_list: "orange"
+      frequency_mask: [1,1,0,1,1]
       frequency:  *f1
 
     OBSTACLE_STOPPED:
       color_mask: []
       color_list: ["white","red","white","red","white"]
       frequency_mask: [0,1,0,1,0]
-      frequency:  *f2
+      frequency:  *f4
 
     POPO:
       color_mask: []
