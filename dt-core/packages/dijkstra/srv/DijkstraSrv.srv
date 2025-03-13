@@ -1,5 +1,5 @@
 duckietown_msgs/Vector2D start_point
-duckietown_msgs/Vector2Dt dest_point
+duckietown_msgs/Vector2D dest_point
 ---
 string type
 string msg
