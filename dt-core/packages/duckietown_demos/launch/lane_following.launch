@@ -32,6 +32,9 @@ LP removing for now
 	    <arg name="LED" value="true"/>
 	    <arg name="/LED/emitter" value="true"/>
 
+	    <!-- Vehicle Detection -->
+	    <arg name="vehicle_avoidance" value="true"/>
+
   	</include>
 
 </launch>
