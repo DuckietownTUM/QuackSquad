@@ -74,8 +74,6 @@
     <arg name="statistics" default="false"/>
     <arg name="enable_statistics" default="$(arg statistics)"/>
     <arg name="maintenance_control" default="false"/>
-
-    <arg name="dijkstra" default="false"/>
     <!-- end switch args -->
 
 
@@ -126,7 +124,7 @@
           </include>
         </group>
     </group>
-    <!--End FSM -->
+    <!--End FSM -->>
 
 
     <!-- Start Lane Following / LF, IN-->
@@ -296,7 +294,6 @@
     <!-- Start LEDs Detection -->
     <group if="$(arg LED)">
         <!-- Detection -->
-        <!--
         <group if="$(arg /LED/detector)">
             <remap from="led_detector_node/image/compressed" to="camera_node/image/compressed"/>
             <include file="$(find led_detection)/launch/led_detection.launch">
@@ -305,7 +302,6 @@
                 <arg name="verbose" value = "1"/>
             </include>
         </group>
-        -->
 
         <!--remap from="led_joy_mapper_node/change_color_pattern" to="led_emitter_node/change_color_pattern" /-->
         <group if="$(arg /LED/joystick)">
@@ -410,16 +406,6 @@
     </group>
     <!-- End anti-instagram -->
 
-    <!-- Start Dijkstra -->
-    <group if="$(arg dijkstra)">
-        <remap from="dijkstra_turns_node/mode" to="fsm_node/mode"/>
-        <!-- <remap from="dijkstra_turns_node/turn_type" to="dijkstra_turns_node/turn_type"/> -->
-
-        <include file="$(find dijkstra)/launch/dijkstra_turns_node.launch">
-            <arg name="veh" value="$(arg veh)"/>
-        </include>
-    </group>
-    <!-- End Dijkstra -->
 
     <!-- Start Parallel Autonomy -->
     <!-- TODO fix or remove
