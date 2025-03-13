@@ -408,16 +408,6 @@
     </group>
     <!-- End anti-instagram -->
 
-    <!-- Start Dijkstra -->
-    <group if="$(arg dijkstra)">
-        <remap from="dijkstra_turns_node/mode" to="fsm_node/mode"/>
-        <!-- <remap from="dijkstra_turns_node/turn_type" to="intersection_navigation_node/turn_type"/> -->
-
-        <include file="$(find dijkstra)/launch/dijkstra_turns_node.launch">
-            <arg name="veh" value="$(arg veh)"/>
-        </include>
-    </group>
-    <!-- End Dijkstra -->
 
     <!-- Start Parallel Autonomy -->
     <!-- TODO fix or remove
@@ -444,5 +434,16 @@
     </group>
     -->
     <!-- End Parallel Autonomy -->
+
+    <!-- Start Dijkstra -->
+    <group if="$(arg dijkstra)">
+        <remap from="dijkstra_turns_node/mode" to="fsm_node/mode"/>
+        <!-- <remap from="dijkstra_turns_node/turn_type" to="intersection_navigation_node/turn_type"/> -->
+
+        <include file="$(find dijkstra)/launch/dijkstra_turns_node.launch">
+            <arg name="veh" value="$(arg veh)"/>
+        </include>
+    </group>
+    <!-- End Dijkstra -->
 
 </launch>
