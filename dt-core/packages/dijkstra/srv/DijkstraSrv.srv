@@ -1,0 +1,2 @@
+duckietown_msgs/Vector2D start_point
+duckietown_msgs/Vector2D dest_point

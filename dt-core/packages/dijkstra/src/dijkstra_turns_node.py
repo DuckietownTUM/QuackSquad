@@ -10,6 +10,7 @@ from dijkstra_utils.components.Graph import Graph
 from dijkstra_utils.components.Route import Route
 from dijkstra_utils.map.Map import DUCKIETOWN_CITY
 from dijkstra_utils.Dijkstra import Dijkstra
+from srv import DijkstraSrv, DijkstraSrvResponse
 
 
 class DijkstraTurnsNode:
@@ -28,22 +29,28 @@ class DijkstraTurnsNode:
         self.sub_topic_mode = rospy.Subscriber("~mode", FSMState, self.cbMode, queue_size=1)
         # self.sub_topic_tag = rospy.Subscriber("~pos", AprilTagsWithInfos, self.cbPos, queue_size=1)
         self.sub_stop_line = rospy.Subscriber("lane_controller_node/intersection_done", BoolStamped, self.cbIntersectionDone, queue_size=1)
+        
+        # Services
+        rospy.Service("~set_pattern", DijkstraSrv, self.srv_start_dijkstra)
 
         # Read parameters
         self.pub_timestep = self.setupParameter("~pub_timestep", 1.0)
 
-        rospy.loginfo(f"[{self.node_name}] Initialized.")
-        self.rate = rospy.Rate(30)  # 10hz
-
         # Dijkstra implementation
+        self.is_following_path = False
+        self.intersection_index = 0
+        self.intersections = []
+        self.path = []
+
+        rospy.loginfo(f"[{self.node_name}] Initialized.")
+
+    def compute_path(self, start_point, dest_point):
         graph = Graph()
         graph.generate_from_map(DUCKIETOWN_CITY)
 
-        start_coordinates = (3, 0)
-        to_coordinates = (3, 5)
-        start = next((node for node in graph.nodes if node.coordinates == start_coordinates))
-        to = next((node for node in graph.nodes if node.coordinates == to_coordinates))
-        route = Route(start, to)
+        start_node = next((node for node in graph.nodes if node.coordinates == start_point))
+        dest_node = next((node for node in graph.nodes if node.coordinates == dest_point))
+        route = Route(start_node, dest_node)
 
         dijkstra = Dijkstra(graph)
         self.path = dijkstra.get_shortest_path(route)
@@ -51,7 +58,22 @@ class DijkstraTurnsNode:
         self.intersection_index = 0
 
         path_tiles = [tile.value.type.value for tile in self.path]
-        print(f"Path: {path_tiles}, intersections: {self.intersections}")
+        rospy.loginfo(f"[{self.node_name}] Path: {path_tiles}, intersections: {self.intersections}")
+
+    def srv_start_dijkstra(self, msg):
+        res = DijkstraSrvResponse()
+        if self.is_following_path:
+            res.type = "err"
+            res.msg = "Duckiebot is already following a path"
+            res.path = self.path
+        else:
+            self.compute_path(msg.start_point.data, msg.dest_point.data)
+            res = DijkstraSrvResponse()
+            res.type = "succes"
+            res.path = self.path
+            print(self.path)
+            
+        return res
 
     def cbMode(self, mode_msg):
         self.fsm_mode = mode_msg.state
@@ -78,8 +100,14 @@ class DijkstraTurnsNode:
                     return 2
                 else:
                     return 0
-                
-        if self.intersection_index < len(self.intersections):
+
+        if self.intersection_index >= len(self.intersections):
+            self.is_following_path = False
+            self.intersection_index = 0
+            self.intersections = []
+            self.path = []
+
+        if self.is_following_path:
             location = self.intersections[self.intersection_index]
             self.turn_type = get_direction(self.path[location - 1], self.path[location], self.path[location + 1])
             direction = "STRAIGHT" if self.turn_type == 1 else "LEFT" if self.turn_type == 0 else "RIGHT"
@@ -92,7 +120,6 @@ class DijkstraTurnsNode:
 
     def cbIntersectionDone(self, intersection_done_msg):
         self.intersection_index += 1
-
 
     def setupParameter(self, param_name, default_value):
         value = rospy.get_param(param_name, default_value)
