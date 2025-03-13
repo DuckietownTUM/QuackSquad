@@ -260,8 +260,12 @@ class LaneControllerNode(DTROS):
         self.controller.update_parameters(self.params)
 
     def on_shutdown(self):
-        stop = WheelsCmdStamped(vel_left=0.0, vel_right=0.0)
-        self.pub_wheels_cmd.publish(stop)
+        stop_msg = WheelsCmdStamped(
+            header=Header(stamp=rospy.Time.now()),
+            vel_left=0.0,
+            vel_right=0.0
+        )
+        self.pub_wheels_cmd.publish(stop_msg)
 
 
 if __name__ == "__main__":
