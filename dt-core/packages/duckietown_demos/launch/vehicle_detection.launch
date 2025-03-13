@@ -8,6 +8,11 @@
         <arg name="veh" value="$(arg veh)"/>
     </include>
 
+    <!-- Led Emitter -->
+    <include file="$(find led_emitter)/launch/led_emitter_node.launch">
+        <arg name="veh" value="$(arg veh)"/>
+    </include>
+
     <!-- Vehicle Filter -->
     <remap from="vehicle_filter_node/mode" to="fsm_node/mode" />
     <remap from="vehicle_filter_node/set_pattern" to="led_emitter_node/set_pattern"/>
