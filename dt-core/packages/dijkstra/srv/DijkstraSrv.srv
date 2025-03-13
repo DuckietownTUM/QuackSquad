@@ -1,2 +1,6 @@
-duckietown_msgs/Vector2D start_point
-duckietown_msgs/Vector2D dest_point
+geometry_msgs/Point start_point
+geometry_msgs/Point dest_point
+---
+string type
+string msg
+geometry_msgs/Point[] path

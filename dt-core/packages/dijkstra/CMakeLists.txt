@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   duckietown_msgs
   rospy
   std_msgs
+  geometry_msgs
+  message_generation
 )
 
 catkin_python_setup()
@@ -63,7 +65,6 @@ include_directories(
 add_service_files(
    FILES
    DijkstraSrv.srv
-   DijkstraSrvResponse.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -74,10 +75,12 @@ add_service_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   duckietown_msgs#   std_msgs
-# )
+generate_messages(
+   DEPENDENCIES
+   #duckietown_msgs
+   std_msgs
+   geometry_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##

@@ -60,15 +60,14 @@ class DijkstraTurnsNode:
         path_tiles = [tile.value.type.value for tile in self.path]
         rospy.loginfo(f"[{self.node_name}] Path: {path_tiles}, intersections: {self.intersections}")
 
-    def srv_start_dijkstra(self, msg):
+    def srv_start_dijkstra(self, req):
         res = DijkstraSrvResponse()
         if self.is_following_path:
             res.type = "err"
             res.msg = "Duckiebot is already following a path"
             res.path = self.path
         else:
-            self.compute_path(msg.start_point.data, msg.dest_point.data)
-            res = DijkstraSrvResponse()
+            self.compute_path(req.start_point, req.dest_point)
             res.type = "succes"
             res.path = self.path
             print(self.path)
