@@ -263,6 +263,7 @@ class LaneControllerNode(DTROS):
         omega += self.params["~omega_ff"].value
 
         # Initialize car control msg, add header from input message
+        car_control_msg = Twist2DStamped()
         car_control_msg.header = pose_msg.header
 
         # Add commands to car message
@@ -274,20 +275,20 @@ class LaneControllerNode(DTROS):
         self.at_stop_line = False
         self.log("At stop line")
 
-        self.log(f"Selecting turn: {self.turn_type}")
-
-        if self.turn_type == 1:
-            return
-        
-        self.change_leds(self.led_signals[self.turn_type])
+        turn_type = 0
+        self.log(f"Selecting turn: {turn_type}")
+        self.change_leds(self.led_signals[turn_type])
 
         # Wait at the stop line
         self.log(f"Sleeping for {self.stop_time.value} seconds")
         rospy.sleep(self.stop_time.value)
 
+        if turn_type == 1:
+            return
+
         # Construct turning command
-        v, omega, turn_dist = self.turn_params[self.turn_type]
-        self.turn_dist = 0.8
+        v, omega, turn_dist = self.turn_params[turn_type]
+        self.turn_dist = 0.5
 
         car_control_msg = Twist2DStamped()
         car_control_msg.header.stamp = rospy.Time.now()
@@ -303,7 +304,7 @@ class LaneControllerNode(DTROS):
         if self.dist_when_stopped is None:
             return
         
-        if self.total_dist - self.dist_when_stopped < self.dist_turn:
+        if self.total_dist - self.dist_when_stopped < self.turn_dist:
             return
         
         # Construct the turn stopping command
@@ -342,17 +343,17 @@ class LaneControllerNode(DTROS):
         if self.last_s is not None:
             dt = current_s - self.last_s
 
-        car_control_msg = Twist2DStamped()
-
         # Stop
         if self.at_stop_line or self.at_obstacle_stop_line:
+            print("stop in lane control")
+            car_control_msg = Twist2DStamped()
             car_control_msg.header = pose_msg.header
             car_control_msg.v = 0
             car_control_msg.omega = 0
             self.publish_cmd(car_control_msg)
 
         if self.at_stop_line:
-            self.at_intersection(self)
+            self.at_intersection()
 
         elif self.is_turning:
             self.turns()
