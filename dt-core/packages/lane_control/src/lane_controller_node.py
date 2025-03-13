@@ -261,7 +261,6 @@ class LaneControllerNode(DTROS):
 
     def on_shutdown(self):
         stop_msg = WheelsCmdStamped(
-            header=Header(stamp=rospy.Time.now()),
             vel_left=0.0,
             vel_right=0.0
         )
