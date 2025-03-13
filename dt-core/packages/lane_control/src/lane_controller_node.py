@@ -259,6 +259,10 @@ class LaneControllerNode(DTROS):
 
         self.controller.update_parameters(self.params)
 
+    def onShutdown(self):
+        stop = WheelsCmdStamped(vel_left=0.0, vel_right=0.0)
+        self.pub_wheels_cmd.publish(stop)
+
 
 if __name__ == "__main__":
     # Initialize the node
