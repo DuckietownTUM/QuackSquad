@@ -260,7 +260,7 @@ class LaneControllerNode(DTROS):
         self.controller.update_parameters(self.params)
 
     def on_shutdown(self):
-        rospy.sleep(1)
+        rospy.sleep(0.5)
         stop_msg = Twist2DStamped(v=0, omega=0.0)
         self.pub_car_cmd.publish(stop_msg)
 
