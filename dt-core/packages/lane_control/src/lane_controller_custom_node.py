@@ -147,11 +147,7 @@ class LaneControllerNode(DTROS):
 
     def cb_turn_type(self, msg):
         if msg.data == -1:
-            idle_msg = BoolStamped()
-            idle_msg.header = Header()
-            idle_msg.data = True
-            #self.pub_idle_mode.publish(idle_msg)
-            #rospy.sleep(3)  #stop the node for the transition time
+            rospy.sleep(3)  #stop the node for the transition time
 
         self.turn_type = msg.data
 

@@ -11,7 +11,8 @@ from dijkstra_utils.components.Graph import Graph
 from dijkstra_utils.components.Route import Route
 from dijkstra_utils.map.Map import DUCKIETOWN_CITY
 from dijkstra_utils.Dijkstra import Dijkstra
-from dijkstra.srv import DijkstraSrv, DijkstraSrvResponse
+from dijkstra.srv import SetRoute, SetRouteResponse
+from deadreckoning.srv import SetPoint, SetPointResponse
 
 
 class DijkstraTurnsNode:
@@ -25,15 +26,16 @@ class DijkstraTurnsNode:
 
         # Setup publishers
         self.pub_turn_type = rospy.Publisher("~turn_type", Int16, queue_size=1, latch=True)
+        self.pub_idle_mode = rospy.Publisher("/duckie/joy_mapper_node/idle_mode", BoolStamped, queue_size=1)
 
         # Setup subscribers
         self.sub_topic_mode = rospy.Subscriber("~mode", FSMState, self.cbMode, queue_size=1)
-        # self.sub_topic_tag = rospy.Subscriber("~pos", AprilTagsWithInfos, self.cbPos, queue_size=1)
         self.sub_stop_line = rospy.Subscriber("lane_controller_node/intersection_done", BoolStamped, self.cbIntersectionDone, queue_size=1)
+        self.sub_coord = rospy.Subscriber("deadreckoning/coordinates", Point, self.cb_update_coord, queue_size=10)
 
         # Services
-        rospy.Service("~compute_path", DijkstraSrv, self.srv_start_dijkstra)
-        self.srv_update_pos = rospy.ServiceProxy("/duckie/deadreckoning/set_start_point", ChangePattern)
+        rospy.Service("~compute_path", SetRoute, self.srv_start_dijkstra)
+        self.srv_update_pos = rospy.ServiceProxy("/duckie/deadreckoning/set_start_point", SetPoint)
 
         # Read parameters
         self.pub_timestep = self.setupParameter("~pub_timestep", 1.0)
@@ -43,6 +45,7 @@ class DijkstraTurnsNode:
         self.intersection_index = 0
         self.intersections = []
         self.path = []
+        self.coord = Point()
 
         rospy.loginfo(f"[{self.node_name}] Initialized.")
 
@@ -66,21 +69,35 @@ class DijkstraTurnsNode:
         rospy.loginfo(f"[{self.node_name}] Path: {path_tiles}, intersections: {self.intersections}")
 
     def srv_start_dijkstra(self, req):
-        res = DijkstraSrvResponse()
+        res = SetRouteResponse()
         if self.is_following_path:
             res.type = "err"
             res.msg = "Duckiebot is already following a path"
             res.path = [Point(node.coordinates[0], node.coordinates[1]) for node in self.path]
         else:
             self.compute_path(req.start_point, req.dest_point)
-            odometry_res = self.update_pos(req.start_point)
-            res.type = "success"
             res.path = [Point(node.coordinates[0], node.coordinates[1]) for node in self.path]
+            
+            if self.update_pos(req.start_point):
+                res.type = "success"
+                res.msg = f"Path computed and postion for odometry changed at {req.start_point.x}; {req.start_point.y}"
+            else:
+                res.type = "error"
+                res.msg = "Path computed but unable to update position for odometry"
 
         return res
     
     def update_pos(self, new_pos):
+        res = SetPointResponse()
+        try:
+            res = self.led_svc(point=new_pos)
+        except rospy.ServiceException as e:
+            self.log(f"Could not set LEDs: {e}", "warn")
 
+        return res.success
+
+    def cb_update_coord(self, coord_msg):
+        self.coord = coord_msg
 
     def cbMode(self, mode_msg):
         self.fsm_mode = mode_msg.state
@@ -88,7 +105,7 @@ class DijkstraTurnsNode:
             self.turn_type = -1
             self.pub_turn_type.publish(self.turn_type)
 
-    def cbPos(self):
+    def get_next_turn(self):
         # Dijkstra implementation
         def get_direction(current_node, intersection_node, next_node):
             cur_x, cur_y = current_node.coordinates
@@ -108,11 +125,13 @@ class DijkstraTurnsNode:
                 else:
                     return 0
 
-        if self.intersection_index >= len(self.intersections):
+        if self.intersection_index >= len(self.intersections) and self.check_at_dest():
             self.is_following_path = False
             self.intersection_index = 0
             self.intersections = []
             self.path = []
+
+            self.pub_idle_mode.publish(BoolStamped(data=True))
 
         if self.is_following_path:
             location = self.intersections[self.intersection_index]
@@ -124,6 +143,11 @@ class DijkstraTurnsNode:
             self.turn_type = -1
             
         self.pub_turn_type.publish(self.turn_type)
+
+    def check_at_dest(self):
+        dest_coord = self.path[-1].coordinates
+        
+        return dest_coord[0] == self.coord.x and dest_coord[1] == self.coord.y
 
     def cbIntersectionDone(self, intersection_done_msg):
         self.intersection_index += 1
@@ -146,7 +170,7 @@ if __name__ == "__main__":
     rate = rospy.Rate(10)
 
     while not rospy.is_shutdown():
-        node.cbPos()
+        node.get_next_turn()
         rate.sleep()
         
     # Setup proper shutdown behavior
