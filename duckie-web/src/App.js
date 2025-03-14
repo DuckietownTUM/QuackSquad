@@ -13,6 +13,8 @@ const App = () => {
   const [idleModeTopic, setIdleModeTopic] = useState(null);
   const [emergencyActive, setEmergencyActive] = useState(false);
   const [isIdle, setIsIdle] = useState(true);
+  const [startPoint, setStartPoint] = useState("");
+  const [destinationPoint, setDestinationPoint] = useState("");
 
   useEffect(() => {
     const ros = new roslib.Ros({ url: ROSBridgeURL });
@@ -171,11 +173,32 @@ const App = () => {
 
   return (
     <div className="flex flex-col items-center p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">🚗 Duckiebot Joystick</h1>
+      <p class="text-lg mb-4">Status: <span id="status" class="font-semibold text-red-600">Disconnected</span></p>
+      <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 mb-8 w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-4">🐤 Duckiebot Path Finder</h1>
+        <div className="flex flex-col gap-2 mt-4">
+          <input
+            type="text"
+            placeholder="Enter start point"
+            value={startPoint}
+            onChange={(e) => setStartPoint(e.target.value)}
+            className="w-full px-4 py-2 border rounded mb-2"
+          />
+          <input
+            type="text"
+            placeholder="Enter destination point"
+            value={destinationPoint}
+            onChange={(e) => setDestinationPoint(e.target.value)}
+            className="w-full px-4 py-2 border rounded mb-4"
+          />
+          <button id="computePath" onClick={startCourse} disabled={emergencyActive || !startPoint || !destinationPoint} className={`px-12 py-2 rounded w-full bg-yellow-400 ${emergencyActive || !startPoint || !destinationPoint ? "opacity-50 cursor-not-allowed" : "hover:bg-yellow-500 text-white"}`} >
+            Continue
+          </button>
+        </div>
+      </div>
 
-      <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-10 w-full max-w-md text-center">
-        <p class="text-lg mb-2">Status: <span id="status" class="font-semibold text-red-600">Disconnected</span></p>
-
+      <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 mb-2 w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-4">🚗 Duckiebot Joystick</h1>
         <Joystick className="flex flex-col gap-2 mt-4" size={150} baseColor="#ddd" stickColor="#999" move={handleMove} stop={handleStop} />
 
         <div className="flex flex-col gap-2 mt-4">
@@ -187,6 +210,7 @@ const App = () => {
           </button>
         </div>
       </div>
+
     </div>
   );
 };
