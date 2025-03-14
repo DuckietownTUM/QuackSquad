@@ -7,4 +7,4 @@ stop_dist: -0.08  # Distance (in m) from the stopping point relative to the bot'
 # ======= DETECTION PARAMETERS =======
 min_segs: 6  # Minimum number of red segments required to confirm a stop line  
 min_y: -1  # Minimum y-coordinate (in m; relative to bot) for a red line to be considered a stop line (prevents wrong side detections)  
-off_time: 2  # Time delay (in s) before detecting stop lines again after clearing an intersection 
+off_time: 2.5  # Time delay (in s) before detecting stop lines again after clearing an intersection 

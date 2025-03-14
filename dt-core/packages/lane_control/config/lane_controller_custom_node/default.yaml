@@ -3,9 +3,9 @@
 # ======= GENERAL PARAMETERS =======
 
 v_bar: 0.25        # Base speed of the robot. Increasing this makes it move faster.
-k_d: -5          # Gain for lateral position correction (should be <= 0).
+k_d: -3.75          # Gain for lateral position correction (should be <= 0).
 k_theta: -6.25     # Gain for heading correction (should be <= 0).
-k_Id: -0.5         # Integral gain for lateral position correction (should be <= 0). Helps reduce steady-state error.
+k_Id: -0.55         # Integral gain for lateral position correction (should be <= 0). Helps reduce steady-state error.
 k_Iphi: 0.0        # Integral gain for heading correction (should be <= 0). Usually kept at 0 to avoid overcorrection.
 
 theta_thres_max: 1.0  # Maximum threshold for heading error correction.
@@ -16,7 +16,7 @@ d_offset: 0.0         # Offset for lateral position (can be used to adjust desir
 deriv_type: "value"   # Type of derivative computation (can affect control response).
 use_LEDs: true        # Whether to use LEDs for visual debugging.
 
-omega_ff: 0.15        # Feedforward angular velocity (helps anticipate turns).
+omega_ff: 0.0        # Feedforward angular velocity (helps anticipate turns).
 
 # ======= INTEGRAL BOUNDS =======
 # Limits on integral correction terms to prevent excessive accumulation.
@@ -51,14 +51,14 @@ verbose: 0            # Debugging verbosity level (0 = minimal output, 2 = maxim
 # LEFT TURN
 l_turn_v: 0.25
 l_turn_omega: 1.5       # (must be > 0)
-l_turn_secs: 2.7
+l_turn_dist: 0.6
 
 # RIGHT TURN
 r_turn_v: 0.25
-r_turn_omega: -4   # (must be < 0)
-r_turn_secs: 1
+r_turn_omega: -3.5   # (must be < 0)
+r_turn_dist: 0.2
 
 # STRAIGHT MOVEMENT (not use by default)
-s_turn_v: 0.22
+s_turn_v: 0.25
 s_turn_omega: 0.0     # (must be = 0)
-s_turn_secs: 4 
+s_turn_dist: 0.8

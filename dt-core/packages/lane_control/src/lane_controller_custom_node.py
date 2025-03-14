@@ -13,9 +13,8 @@ from duckietown_msgs.msg import (
     StopLineReading,
     VehicleCorners,
 )
-from std_msgs.msg import String, Int8, Int16, Empty, Bool, Header
+from std_msgs.msg import String, Int16, Header, Float32
 from lane_controller.controller import LaneController
-
 
 class LaneControllerNode(DTROS):
     """Computes control action.
@@ -80,16 +79,16 @@ class LaneControllerNode(DTROS):
 
         self.l_turn_v = DTParam("~l_turn_v")
         self.l_turn_omega = DTParam("~l_turn_omega")
-        self.l_turn_secs = DTParam("~l_turn_secs")
+        self.l_turn_dist = DTParam("~l_turn_dist")
 
         self.r_turn_v = DTParam("~r_turn_v")
         self.r_turn_omega = DTParam("~r_turn_omega")
-        self.r_turn_secs = DTParam("~r_turn_secs")
+        self.r_turn_dist = DTParam("~r_turn_dist")
 
         # Useful if the bot doesn't go straight on its own
         self.s_turn_v = DTParam("~s_turn_v")
         self.s_turn_omega = DTParam("~s_turn_omega")
-        self.s_turn_secs = DTParam("~s_turn_secs")
+        self.s_turn_dist = DTParam("~s_turn_dist")
 
         # Need to create controller object before updating parameters, otherwise it will fail
         self.controller = LaneController(self.params)
@@ -107,7 +106,10 @@ class LaneControllerNode(DTROS):
         self.prev_at_stop_line_time = None
         self.current_pose_source = "lane_filter"
         self.turn_type = -1
-
+        self.total_dist = 0
+        self.dist_when_stopped = 0
+        self.turn_dist = None
+        self.is_turning = False
         self.drive_running = False
 
         self.led_signals = [
@@ -117,9 +119,9 @@ class LaneControllerNode(DTROS):
         ]
 
         self.turn_params = [
-            (self.l_turn_v, self.l_turn_omega, self.l_turn_secs),
-            (self.s_turn_v, self.s_turn_omega, self.s_turn_secs),
-            (self.r_turn_v, self.r_turn_omega, self.r_turn_secs),
+            (self.l_turn_v, self.l_turn_omega, self.l_turn_dist),
+            (self.s_turn_v, self.s_turn_omega, self.s_turn_dist),
+            (self.r_turn_v, self.r_turn_omega, self.r_turn_dist),
         ]
 
         # Construct publishers
@@ -134,6 +136,7 @@ class LaneControllerNode(DTROS):
         self.sub_stop_line = rospy.Subscriber("~stop_line_reading", StopLineReading, self.cb_stop_line_reading, queue_size=1)
         self.sub_obstacle_stop_line = rospy.Subscriber("~obstacle_distance_reading", StopLineReading, self.cb_obstacle_stop_line_reading, queue_size=1)
         self.sub_turn_type = rospy.Subscriber("dijkstra_turns_node/turn_type", Int16, self.cb_turn_type)
+        self.sub_total_dist = rospy.Subscriber("deadreckoning_node/total_dist", Float32, self.cb_total_dist)
 
         # LED control service
         rospy.wait_for_service("/duckie/led_emitter_node/set_pattern", timeout=5)
@@ -171,9 +174,9 @@ class LaneControllerNode(DTROS):
         """
 
         # Only stop at stop lines at minimum s second intervals
-        #if msg.at_stop_line and self.prev_at_stop_line_time is not None:
-        #    if msg.header.stamp.to_sec() - self.prev_at_stop_line_time.to_sec() < 2:
-        #            return
+        if msg.at_stop_line and self.prev_at_stop_line_time is not None:
+           if msg.header.stamp.to_sec() - self.prev_at_stop_line_time.to_sec() < 2:
+                   return
 
         self.at_stop_line = msg.at_stop_line
         self.prev_at_stop_line_time = msg.header.stamp
@@ -201,6 +204,12 @@ class LaneControllerNode(DTROS):
         """
         self.wheels_cmd_executed = msg_wheels_cmd
 
+        if msg_wheels_cmd.vel_left == 0 and msg_wheels_cmd.vel_right == 0:
+            self.dist_when_stopped = self.total_dist
+
+    def cb_total_dist(self, dist_msg):
+        self.total_dist = dist_msg.data
+
     def publish_cmd(self, car_cmd_msg):
         """Publishes a car command message.
 
@@ -222,41 +231,99 @@ class LaneControllerNode(DTROS):
     def save_pose(self, pose_msg):
         self.pose_msg = pose_msg
 
-    def execute_turn(self, turn_type):
-        self.change_leds(self.led_signals[turn_type])
+    def lane_following(self, pose_msg, dt):
+        # Compute errors
+        d_err = pose_msg.d - self.params["~d_offset"].value
+        phi_err = pose_msg.phi
+
+        # We cap the error if it grows too large
+        if np.abs(d_err) > self.params["~d_thres"].value:
+            self.log("d_err too large, thresholding it!", "warn")
+            d_err = np.sign(d_err) * self.params["~d_thres"].value
+
+        if phi_err > self.params["~theta_thres_max"].value or phi_err < self.params["~theta_thres_min"].value:
+            self.log(f"phi_err too small/large({phi_err}), thresholding it!", "warn")
+            phi_err = np.clip(phi_err, self.params["~theta_thres_min"].value, self.params["~theta_thres_max"].value)
+
+        wheels_cmd_exec = [self.wheels_cmd_executed.vel_left, self.wheels_cmd_executed.vel_right]
+
+        if self.obstacle_stop_line_detected:
+            v, omega = self.controller.compute_control_action(d_err, phi_err, dt, wheels_cmd_exec, self.obstacle_stop_line_distance)
+
+            # TODO: This is a temporarily fix to avoid vehicle image detection latency caused unable to stop in time.
+            v = v * 0.25
+            omega = omega * 0.25
+
+        else:
+            # stop_line_distance is always None to avoid unwanted very slow speed 
+            v, omega = self.controller.compute_control_action(d_err, phi_err, dt, wheels_cmd_exec, self.stop_line_distance)
+
+        # For feedforward action (i.e. during intersection navigation)
+        omega += self.params["~omega_ff"].value
+
+        # Initialize car control msg, add header from input message
+        car_control_msg = Twist2DStamped()
+        car_control_msg.header = pose_msg.header
+
+        # Add commands to car message
+        car_control_msg.v = v
+        car_control_msg.omega = omega
+        self.publish_cmd(car_control_msg)
+    
+    def at_intersection(self):
+        self.at_stop_line = False
+        self.log("At stop line")
+
+        self.log(f"Selecting turn: {self.turn_type}")
+        self.change_leds(self.led_signals[self.turn_type])
 
         # Wait at the stop line
         self.log(f"Sleeping for {self.stop_time.value} seconds")
         rospy.sleep(self.stop_time.value)
 
-        if turn_type == 1:
+        if self.turn_type == 1:
             return
 
         # Construct turning command
-        v, omega, sleep_time = self.turn_params[turn_type]
+        v, omega, turn_dist = self.turn_params[self.turn_type]
+        self.turn_dist = turn_dist
+
         car_control_msg = Twist2DStamped()
         car_control_msg.header.stamp = rospy.Time.now()
         car_control_msg.v = v.value
         car_control_msg.omega = omega.value
 
-        # Turn
+        # # Turn
         self.publish_cmd(car_control_msg)
         self.log("Turning now")
-        rospy.sleep(sleep_time.value)
+        self.is_turning = True
+
+    def turns(self):
+        if self.dist_when_stopped is None:
+            return
+
+        if self.total_dist - self.dist_when_stopped < self.turn_dist:
+            return
 
         # Construct the turn stopping command
         car_stop_msg = Twist2DStamped()
         car_stop_msg.v = 0
         car_stop_msg.omega = 0
 
-        # Stop turn
+        # # Stop turn
         self.publish_cmd(car_stop_msg)
         self.log("Stopping turn")
+        self.is_turning = False
+        self.dist_when_stopped = None
 
         self.change_leds(String("CAR_DRIVING"))
 
+        done_msg = BoolStamped()
+        done_msg.header = Header()
+        done_msg.data = True
+        self.pub_intersection_done.publish(done_msg)
+
     def drive(self):
-        #print(self.stop_line_distance)
         if self.drive_running:
             rospy.logfatal("drive is already running")
             return
@@ -274,67 +341,23 @@ class LaneControllerNode(DTROS):
         if self.last_s is not None:
             dt = current_s - self.last_s
 
-        car_control_msg = Twist2DStamped()
-
         # Stop
         if self.at_stop_line or self.at_obstacle_stop_line:
+            print("stop in lane control")
+            car_control_msg = Twist2DStamped()
             car_control_msg.header = pose_msg.header
             car_control_msg.v = 0
             car_control_msg.omega = 0
             self.publish_cmd(car_control_msg)
 
-        if self.at_obstacle_stop_line:
-            self.log("at obstacle stop line")
+        if self.at_stop_line:
+            self.at_intersection()
 
-        elif self.at_stop_line:
-            self.log("At stop line")
-            self.at_stop_line = False
-
-            self.log(f"Selecting turn: {self.turn_type}")
-            self.execute_turn(0)
-
-            done_msg = BoolStamped()
-            done_msg.header = Header()
-            done_msg.data = True
-            self.pub_intersection_done.publish(done_msg)
+        elif self.is_turning:
+            self.turns()
 
         else:  # Lane following
-            # Compute errors
-            d_err = pose_msg.d - self.params["~d_offset"].value
-            phi_err = pose_msg.phi
-
-            # We cap the error if it grows too large
-            if np.abs(d_err) > self.params["~d_thres"].value:
-                self.log("d_err too large, thresholding it!", "warn")
-                d_err = np.sign(d_err) * self.params["~d_thres"].value
-
-            if phi_err > self.params["~theta_thres_max"].value or phi_err < self.params["~theta_thres_min"].value:
-                self.log(f"phi_err too small/large({phi_err}), thresholding it!", "warn")
-                phi_err = np.clip(phi_err, self.params["~theta_thres_min"].value, self.params["~theta_thres_max"].value)
-
-            wheels_cmd_exec = [self.wheels_cmd_executed.vel_left, self.wheels_cmd_executed.vel_right]
-
-            if self.obstacle_stop_line_detected:
-                v, omega = self.controller.compute_control_action(d_err, phi_err, dt, wheels_cmd_exec, self.obstacle_stop_line_distance)
-
-                # TODO: This is a temporarily fix to avoid vehicle image detection latency caused unable to stop in time.
-                v = v * 0.25
-                omega = omega * 0.25
-
-            else:
-                # stop_line_distance is always None to avoid unwanted very slow speed 
-                v, omega = self.controller.compute_control_action(d_err, phi_err, dt, wheels_cmd_exec, self.stop_line_distance)
-
-            # For feedforward action (i.e. during intersection navigation)
-            omega += self.params["~omega_ff"].value
-
-            # Initialize car control msg, add header from input message
-            car_control_msg.header = pose_msg.header
-
-            # Add commands to car message
-            car_control_msg.v = v
-            car_control_msg.omega = omega
-            self.publish_cmd(car_control_msg)
+            self.lane_following(pose_msg, dt)
 
         # Set the current time stamp, needed for lane following
         # Important: this needs to be set whether we're doing lane following or
