@@ -7,7 +7,7 @@ import message_filters
 
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Quaternion, Twist, Pose, Point, Vector3, TransformStamped, Transform
-from deadreckoning.srv import SetPoint
+from deadreckoning.srv import SetPoint, SetPointResponse
 
 from duckietown.dtros import DTROS, NodeType
 from duckietown_msgs.msg import WheelEncoderStamped
@@ -231,7 +231,7 @@ class DeadReckoningNode(DTROS):
         self.x = self.tile_size * req.point.x
         self.y = self.tile_size * req.point.y
 
-        res = SetPoint(success=True, message=f"Start point set to ({req.point.x}, {req.point.y}")
+        res = SetPointResponse(success=True, message=f"Start point set to ({req.point.x}, {req.point.y}")
         return res
 
     @staticmethod
