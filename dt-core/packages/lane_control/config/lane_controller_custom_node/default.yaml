@@ -2,7 +2,7 @@
 
 # ======= GENERAL PARAMETERS =======
 
-v_bar: 0.2        # Base speed of the robot. Increasing this makes it move faster.
+v_bar: 0.25        # Base speed of the robot. Increasing this makes it move faster.
 k_d: -3.75          # Gain for lateral position correction (should be <= 0).
 k_theta: -6.25     # Gain for heading correction (should be <= 0).
 k_Id: -0.55         # Integral gain for lateral position correction (should be <= 0). Helps reduce steady-state error.
@@ -51,14 +51,14 @@ verbose: 0            # Debugging verbosity level (0 = minimal output, 2 = maxim
 # LEFT TURN
 l_turn_v: 0.25
 l_turn_omega: 1.5       # (must be > 0)
-l_turn_secs: 0.6
+l_turn_dist: 0.6
 
 # RIGHT TURN
 r_turn_v: 0.25
 r_turn_omega: -3.5   # (must be < 0)
-r_turn_secs: 1
+r_turn_dist: 0.2
 
 # STRAIGHT MOVEMENT (not use by default)
-s_turn_v: 0.22
+s_turn_v: 0.25
 s_turn_omega: 0.0     # (must be = 0)
-s_turn_secs: 4 
+s_turn_dist: 0.8

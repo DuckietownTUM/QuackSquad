@@ -79,16 +79,16 @@ class LaneControllerNode(DTROS):
 
         self.l_turn_v = DTParam("~l_turn_v")
         self.l_turn_omega = DTParam("~l_turn_omega")
-        self.l_turn_secs = DTParam("~l_turn_secs")
+        self.l_turn_dist = DTParam("~l_turn_dist")
 
         self.r_turn_v = DTParam("~r_turn_v")
         self.r_turn_omega = DTParam("~r_turn_omega")
-        self.r_turn_secs = DTParam("~r_turn_secs")
+        self.r_turn_dist = DTParam("~r_turn_dist")
 
         # Useful if the bot doesn't go straight on its own
         self.s_turn_v = DTParam("~s_turn_v")
         self.s_turn_omega = DTParam("~s_turn_omega")
-        self.s_turn_secs = DTParam("~s_turn_secs")
+        self.s_turn_dist = DTParam("~s_turn_dist")
 
         # Need to create controller object before updating parameters, otherwise it will fail
         self.controller = LaneController(self.params)
@@ -119,9 +119,9 @@ class LaneControllerNode(DTROS):
         ]
 
         self.turn_params = [
-            (self.l_turn_v, self.l_turn_omega, self.l_turn_secs),
-            (self.s_turn_v, self.s_turn_omega, self.s_turn_secs),
-            (self.r_turn_v, self.r_turn_omega, self.r_turn_secs),
+            (self.l_turn_v, self.l_turn_omega, self.l_turn_dist),
+            (self.s_turn_v, self.s_turn_omega, self.s_turn_dist),
+            (self.r_turn_v, self.r_turn_omega, self.r_turn_dist),
         ]
 
         # Construct publishers
@@ -274,20 +274,19 @@ class LaneControllerNode(DTROS):
         self.at_stop_line = False
         self.log("At stop line")
 
-        turn_type = 2
-        self.log(f"Selecting turn: {turn_type}")
-        self.change_leds(self.led_signals[turn_type])
+        self.log(f"Selecting turn: {self.turn_type}")
+        self.change_leds(self.led_signals[self.turn_type])
 
         # Wait at the stop line
         self.log(f"Sleeping for {self.stop_time.value} seconds")
         rospy.sleep(self.stop_time.value)
 
-        if turn_type == 1:
+        if self.turn_type == 1:
             return
 
         # Construct turning command
-        v, omega, turn_dist = self.turn_params[turn_type]
-        self.turn_dist = 0.2
+        v, omega, turn_dist = self.turn_params[self.turn_type]
+        self.turn_dist = turn_dist
 
         car_control_msg = Twist2DStamped()
         car_control_msg.header.stamp = rospy.Time.now()
