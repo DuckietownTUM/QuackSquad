@@ -72,7 +72,7 @@ class DijkstraTurnsNode:
             res.path = [Point(node.coordinates[0], node.coordinates[1]) for node in self.path]
         else:
             self.compute_path(req.start_point, req.dest_point)
-            res.type = "succes"
+            res.type = "success"
             res.path = [Point(node.coordinates[0], node.coordinates[1]) for node in self.path]
 
         return res
