@@ -256,7 +256,7 @@ class LaneControllerNode(DTROS):
 
         else:
             # stop_line_distance is always None to avoid unwanted very slow speed 
-            v, omega = self.controller.compute_control_action(d_err, phi_err, dt, wheels_cmd_exec, self.stop_line_distance)
+            v, omega = self.controller.compute_control_action(d_err, phi_err, dt, wheels_cmd_exec, None)
 
         # For feedforward action (i.e. during intersection navigation)
         omega += self.params["~omega_ff"].value
