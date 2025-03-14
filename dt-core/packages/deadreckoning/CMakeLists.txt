@@ -7,6 +7,8 @@ find_package(catkin REQUIRED COMPONENTS
   # duckietown_msgs # Every duckietown packages should use this.
 )
 
+catkin_python_setup()
+
 add_service_files(
    FILES
    SetPoint.srv
