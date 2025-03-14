@@ -49,7 +49,7 @@ const App = () => {
       let computePathSrv = new roslib.Service({
         ros: ros,
         name: '/duckie/dijkstra_turns_node/compute_path',
-        serviceType: 'std_srvs/Trigger', // Change the type if the service has a specific one
+        serviceType: 'dijkstra/SetRoute', // Change the type if the service has a specific one
       });
   
       eStopTopic.subscribe(handleEStop);
@@ -192,11 +192,12 @@ const App = () => {
     }
 
     let req = new roslib.ServiceRequest({
-      start_point: {x: startPoint[0], y: startPoint[2]},
-      destination_point: { x: destinationPoint[0], y: destinationPoint[2] }
+      start_point: {x: parseFloat(startPoint[0]), y: parseFloat(startPoint[2]), z:0.0},
+      dest_point: { x: parseFloat(destinationPoint[0]), y: parseFloat(destinationPoint[2]), z:0.0}
     });
 
     computePathSrv.callService(req, (res) => {
+      console.log(res)
       if (res.success) {
         console.log("Path computed successfully!");
         // Optionally, update UI with path information or status
