@@ -145,7 +145,7 @@ class DijkstraTurnsNode:
         self.pub_turn_type.publish(self.turn_type)
 
     def check_at_dest(self):
-        if len(self.path) = 0:
+        if len(self.path) == 0:
             return
 
         dest_coord = self.path[-1].coordinates
