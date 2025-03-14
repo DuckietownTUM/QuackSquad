@@ -98,6 +98,11 @@ class DeadReckoningNode(DTROS):
 
         self.loginfo("Initialized")
 
+        # Dijkstra
+        self.tile_size = rospy.get_param("~veh")
+        self.x = self.tile_size * 3
+        self.y = self.tile_size * 0
+
     def cb_ts_encoders(self, left_encoder, right_encoder):
         timestamp_now = rospy.get_time()
 
@@ -215,10 +220,9 @@ class DeadReckoningNode(DTROS):
             )
         )
 
-        TILE_SIZE = 0.61
         coordinates_msg = Point(
-            int(self.x/TILE_SIZE),
-            int(-self.y/TILE_SIZE),
+            int(self.x / self.tile_size),
+            int(-self.y / self.tile_size),
             0
         )
         self.pub_coordinates.publish(coordinates_msg)
