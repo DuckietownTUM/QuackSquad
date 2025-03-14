@@ -101,7 +101,7 @@ class DeadReckoningNode(DTROS):
 
         # Dijkstra
         self.tile_size = rospy.get_param("~tile_size")
-        rospy.Service("~set_start_point", SetPoint, self.srv_start_dijkstra)
+        rospy.Service("~set_start_point", SetPoint, self.srv_set_start_point)
 
     def cb_ts_encoders(self, left_encoder, right_encoder):
         timestamp_now = rospy.get_time()
@@ -227,7 +227,7 @@ class DeadReckoningNode(DTROS):
         )
         self.pub_coordinates.publish(coordinates_msg)
 
-    def srvSetStartPoint(self, req):
+    def srv_set_start_point(self, req):
         self.x = self.tile_size * req.point.x
         self.y = self.tile_size * req.point.y
 
