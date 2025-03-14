@@ -4,7 +4,7 @@ project(deadreckoning)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
-  duckietown_msgs # Every duckietown packages should use this.
+  # duckietown_msgs # Every duckietown packages should use this.
   message_generation
 )
 
@@ -13,7 +13,13 @@ add_service_files(
   SetPoint.srv
 )
 
-catkin_package()
+generate_messages(
+  DEPENDENCIES
+)
+
+catkin_package(
+  CATKIN_DEPENDS message_runtime
+)
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
