@@ -5,14 +5,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   # duckietown_msgs # Every duckietown packages should use this.
+  message_generation
 )
 
-catkin_python_setup()
-
 add_service_files(
-   FILES
-   SetPoint.srv
- )
+  FILES
+  SetPoint.srv
+)
 
 catkin_package()
 
