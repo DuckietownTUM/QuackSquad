@@ -146,10 +146,11 @@ class LaneControllerNode(DTROS):
         self.log("Initialized!")
 
     def cb_turn_type(self, msg):
-        if msg.data == -1:
-            rospy.sleep(3)  #stop the node for the transition time
-
         self.turn_type = msg.data
+
+        if msg.data == -1:
+            self.turn_type = 1
+            #rospy.sleep(3)  #stop the node for the transition time
 
     def cb_obstacle_stop_line_reading(self, msg):
         """

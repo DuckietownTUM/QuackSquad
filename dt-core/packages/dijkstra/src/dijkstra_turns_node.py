@@ -31,11 +31,11 @@ class DijkstraTurnsNode:
         # Setup subscribers
         self.sub_topic_mode = rospy.Subscriber("~mode", FSMState, self.cbMode, queue_size=1)
         self.sub_stop_line = rospy.Subscriber("lane_controller_node/intersection_done", BoolStamped, self.cbIntersectionDone, queue_size=1)
-        self.sub_coord = rospy.Subscriber("deadreckoning/coordinates", Point, self.cb_update_coord, queue_size=10)
+        self.sub_coord = rospy.Subscriber("deadreckoning_node/coordinates", Point, self.cb_update_coord, queue_size=10)
 
         # Services
         rospy.Service("~compute_path", SetRoute, self.srv_start_dijkstra)
-        self.srv_update_pos = rospy.ServiceProxy("/duckie/deadreckoning/set_start_point", SetPoint)
+        self.srv_update_pos = rospy.ServiceProxy("/duckie/deadreckoning_node/set_start_point", SetPoint)
 
         # Read parameters
         self.pub_timestep = self.setupParameter("~pub_timestep", 1.0)
@@ -90,9 +90,9 @@ class DijkstraTurnsNode:
     def update_pos(self, new_pos):
         res = SetPointResponse()
         try:
-            res = self.led_svc(point=new_pos)
+            res = self.srv_update_pos(point=new_pos)
         except rospy.ServiceException as e:
-            self.log(f"Could not set LEDs: {e}", "warn")
+            rospy.logwarn(f"Could not set start position: {e}")
 
         return res.success
 
@@ -145,8 +145,10 @@ class DijkstraTurnsNode:
         self.pub_turn_type.publish(self.turn_type)
 
     def check_at_dest(self):
+        if len(self.path) = 0:
+            return
+
         dest_coord = self.path[-1].coordinates
-        
         return dest_coord[0] == self.coord.x and dest_coord[1] == self.coord.y
 
     def cbIntersectionDone(self, intersection_done_msg):
