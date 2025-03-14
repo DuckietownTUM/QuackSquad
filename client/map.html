@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puntatore su immagine</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            position: relative;
+            display: inline-block;
+        }
+        .image {
+            width: 500px; /* Modifica la dimensione in base alle esigenze */
+            height: auto;
+        }
+        .pointer {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%); /* Centra il pallino esattamente sulla posizione */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="https://via.placeholder.com/500x300" alt="Immagine di sfondo" class="image">
+        <div class="pointer" id="pointer"></div>
+    </div>
+
+    <script>
+        // Variabili per la posizione (in pixel rispetto all'immagine)
+        let posX = 250; // Centrato orizzontalmente
+        let posY = 150; // Centrato verticalmente
+
+        // Funzione per aggiornare la posizione del puntatore
+        function updatePointer() {
+            const pointer = document.getElementById("pointer");
+            pointer.style.left = posX + "px";
+            pointer.style.top = posY + "px";
+        }
+
+        // Sposta il puntatore dopo 2 secondi (esempio dinamico)
+        setTimeout(() => {
+            posX = 100;
+            posY = 50;
+            updatePointer();
+        }, 2000);
+
+        // Inizializza la posizione iniziale
+        updatePointer();
+    </script>
+
+</body>
+</html>
