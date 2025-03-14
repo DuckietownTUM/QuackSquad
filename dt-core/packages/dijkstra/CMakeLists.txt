@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   duckietown_msgs
+  geometry_msgs
   message_generation
 )
 
@@ -76,8 +77,9 @@ add_service_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
    DEPENDENCIES
-   duckietown_msgs
+   #duckietown_msgs
    std_msgs
+   geometry_msgs
  )
 
 ################################################

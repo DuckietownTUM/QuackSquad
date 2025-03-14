@@ -3,7 +3,8 @@
 
 import numpy
 import rospy
-from duckietown_msgs.msg import FSMState, BoolStamped, Vector2D
+from duckietown_msgs.msg import FSMState, BoolStamped
+from geometry_msgs.msg import Point
 from std_msgs.msg import Int16
 
 from dijkstra_utils.components.Graph import Graph
@@ -68,11 +69,11 @@ class DijkstraTurnsNode:
         if self.is_following_path:
             res.type = "err"
             res.msg = "Duckiebot is already following a path"
-            res.path = [Vector2D(node.coordinates[0], node.coordinates[1]) for node in self.path]
+            res.path = [Point(node.coordinates[0], node.coordinates[1]) for node in self.path]
         else:
             self.compute_path(req.start_point, req.dest_point)
             res.type = "succes"
-            res.path = [Vector2D(node.coordinates[0], node.coordinates[1]) for node in self.path]
+            res.path = [Point(node.coordinates[0], node.coordinates[1]) for node in self.path]
 
         return res
 
