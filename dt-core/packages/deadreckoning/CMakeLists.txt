@@ -4,11 +4,9 @@ project(deadreckoning)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  duckietown_msgs # Every duckietown packages should use this.
   message_generation
-  duckietown_msgs
 )
-
-catkin_python_setup()
 
 add_service_files(
   FILES
