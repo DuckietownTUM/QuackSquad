@@ -215,7 +215,7 @@ class DeadReckoningNode(DTROS):
             )
         )
 
-        TILE_SIZE = 61
+        TILE_SIZE = 0.61
         coordinates_msg = Point(
             int(self.x/TILE_SIZE),
             int(self.y/TILE_SIZE),
