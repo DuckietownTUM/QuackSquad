@@ -16,37 +16,56 @@ const App = () => {
 
   useEffect(() => {
     const ros = new roslib.Ros({ url: ROSBridgeURL });
-    ros.on("connection", () => console.log("Connected to ROS"));
-    ros.on("error", (error) => console.error("ROS error: ", error));
-    ros.on("close", () => console.log("Disconnected from ROS"));
+    ros.on("connection", () => {
+      console.log("Connected to ROS")
 
-    const pub = new roslib.Topic({
-      ros: ros,
-      name: topicName,
-      messageType: "sensor_msgs/Joy",
-    });
+      document.getElementById("status").textContent = "Connected";
+      document.getElementById("status").classList.remove("text-red-600");
+      document.getElementById("status").classList.add("text-green-600");
 
-    const eStopTopic = new roslib.Topic({
-      ros: ros,
-      name: "/duckie/wheels_driver_node/emergency_stop",
-      messageType: "duckietown_msgs/BoolStamped"
-    });
+      const pub = new roslib.Topic({
+        ros: ros,
+        name: topicName,
+        messageType: "sensor_msgs/Joy",
+      });
 
-    const idleModeTopic = new roslib.Topic({
-      ros: ros,
-      name: "/duckie/joy_mapper_node/idle_mode",
-      messageType: "duckietown_msgs/BoolStamped"
-    });
+      const eStopTopic = new roslib.Topic({
+        ros: ros,
+        name: "/duckie/wheels_driver_node/emergency_stop",
+        messageType: "duckietown_msgs/BoolStamped"
+      });
 
-    eStopTopic.subscribe(handleEStop);
-    idleModeTopic.subscribe(handleIdleMode);
+      const idleModeTopic = new roslib.Topic({
+        ros: ros,
+        name: "/duckie/joy_mapper_node/idle_mode",
+        messageType: "duckietown_msgs/BoolStamped"
+      });
 
-    setRos(ros);
-    setPublisher(pub);
-    setEStopTopic(eStopTopic)
-    setIdleModeTopic(idleModeTopic)
+      eStopTopic.subscribe(handleEStop);
+      idleModeTopic.subscribe(handleIdleMode);
 
-    
+      setRos(ros);
+      setPublisher(pub);
+      setEStopTopic(eStopTopic)
+      setIdleModeTopic(idleModeTopic)
+    })
+
+    ros.on("error", (error) => {
+      console.error("ROS error: ", error)
+      
+      document.getElementById("status").textContent = "Error Connecting";
+      document.getElementById("status").classList.remove("text-green-600");
+      document.getElementById("status").classList.add("text-red-600");
+    })
+
+    ros.on("close", () => {
+      console.log("Disconnected from ROS")
+
+      document.getElementById("status").textContent = "Disconnected";
+      document.getElementById("status").classList.remove("text-green-600");
+      document.getElementById("status").classList.add("text-red-600");
+    })
+
     return () => {
       ros.close();
     };
@@ -155,9 +174,7 @@ const App = () => {
       <h1 className="text-2xl font-bold mb-4">🚗 Duckiebot Joystick</h1>
 
       <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-10 w-full max-w-md text-center">
-        <p className={`text-lg font-semibold mb-4 ${ros ? "text-green-600" : "text-red-600"}`}>
-          {ros ? "Connected" : "Disconnected"}
-        </p>
+        <p class="text-lg mb-2">Status: <span id="status" class="font-semibold text-red-600">Disconnected</span></p>
 
         <Joystick className="flex flex-col gap-2 mt-4" size={150} baseColor="#ddd" stickColor="#999" move={handleMove} stop={handleStop} />
 
