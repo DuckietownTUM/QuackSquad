@@ -11,7 +11,7 @@ from dijkstra_utils.components.Graph import Graph
 from dijkstra_utils.components.Route import Route
 from dijkstra_utils.map.Map import DUCKIETOWN_CITY
 from dijkstra_utils.Dijkstra import Dijkstra
-from dijkstra.srv import DijkstraSrv, DijkstraSrvResponse
+from dijkstra.srv import SetRoute, SetRouteResponse
 
 
 class DijkstraTurnsNode:
@@ -32,7 +32,7 @@ class DijkstraTurnsNode:
         self.sub_stop_line = rospy.Subscriber("lane_controller_node/intersection_done", BoolStamped, self.cbIntersectionDone, queue_size=1)
 
         # Services
-        rospy.Service("~compute_path", DijkstraSrv, self.srv_start_dijkstra)
+        rospy.Service("~compute_path", SetRoute, self.srv_start_dijkstra)
 
         # Read parameters
         self.pub_timestep = self.setupParameter("~pub_timestep", 1.0)
@@ -65,7 +65,7 @@ class DijkstraTurnsNode:
         rospy.loginfo(f"[{self.node_name}] Path: {path_tiles}, intersections: {self.intersections}")
 
     def srv_start_dijkstra(self, req):
-        res = DijkstraSrvResponse()
+        res = SetRouteResponse()
         if self.is_following_path:
             res.type = "err"
             res.msg = "Duckiebot is already following a path"
