@@ -1,6 +1,6 @@
 # Initial state of the FSM
 
-initial_state: "IDLE_MODE"
+initial_state: "LANE_FOLLOWING"
 
 events: # Maps from subscribing topic to signal ids
   idle_mode_on:
