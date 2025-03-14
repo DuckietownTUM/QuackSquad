@@ -33,6 +33,7 @@ class DijkstraTurnsNode:
 
         # Services
         rospy.Service("~compute_path", DijkstraSrv, self.srv_start_dijkstra)
+        self.srv_update_pos = rospy.ServiceProxy("/duckie/deadreckoning/set_start_point", ChangePattern)
 
         # Read parameters
         self.pub_timestep = self.setupParameter("~pub_timestep", 1.0)
@@ -72,10 +73,14 @@ class DijkstraTurnsNode:
             res.path = [Point(node.coordinates[0], node.coordinates[1]) for node in self.path]
         else:
             self.compute_path(req.start_point, req.dest_point)
+            odometry_res = self.update_pos(req.start_point)
             res.type = "success"
             res.path = [Point(node.coordinates[0], node.coordinates[1]) for node in self.path]
 
         return res
+    
+    def update_pos(self, new_pos):
+
 
     def cbMode(self, mode_msg):
         self.fsm_mode = mode_msg.state
