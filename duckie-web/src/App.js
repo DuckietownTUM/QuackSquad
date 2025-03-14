@@ -15,54 +15,64 @@ const App = () => {
   const [isIdle, setIsIdle] = useState(true);
   const [startPoint, setStartPoint] = useState("");
   const [destinationPoint, setDestinationPoint] = useState("");
+  const [computePathSrv, setComputePathSrv] = useState(null)
 
   useEffect(() => {
     const ros = new roslib.Ros({ url: ROSBridgeURL });
+
     ros.on("connection", () => {
       console.log("Connected to ROS")
-
+  
       document.getElementById("status").textContent = "Connected";
       document.getElementById("status").classList.remove("text-red-600");
       document.getElementById("status").classList.add("text-green-600");
-
-      const pub = new roslib.Topic({
+  
+      let pub = new roslib.Topic({
         ros: ros,
         name: topicName,
         messageType: "sensor_msgs/Joy",
       });
-
-      const eStopTopic = new roslib.Topic({
+  
+      let eStopTopic = new roslib.Topic({
         ros: ros,
         name: "/duckie/wheels_driver_node/emergency_stop",
         messageType: "duckietown_msgs/BoolStamped"
       });
-
-      const idleModeTopic = new roslib.Topic({
+  
+      let idleModeTopic = new roslib.Topic({
         ros: ros,
         name: "/duckie/joy_mapper_node/idle_mode",
         messageType: "duckietown_msgs/BoolStamped"
       });
-
+  
+      // Connect to the service
+      let computePathSrv = new roslib.Service({
+        ros: ros,
+        name: '/duckie/dijkstra_turns_node/compute_path',
+        serviceType: 'std_srvs/Trigger', // Change the type if the service has a specific one
+      });
+  
       eStopTopic.subscribe(handleEStop);
       idleModeTopic.subscribe(handleIdleMode);
-
+  
       setRos(ros);
       setPublisher(pub);
       setEStopTopic(eStopTopic)
       setIdleModeTopic(idleModeTopic)
+      setComputePathSrv(computePathSrv)
     })
-
+  
     ros.on("error", (error) => {
       console.error("ROS error: ", error)
-      
+  
       document.getElementById("status").textContent = "Error Connecting";
       document.getElementById("status").classList.remove("text-green-600");
       document.getElementById("status").classList.add("text-red-600");
     })
-
+  
     ros.on("close", () => {
       console.log("Disconnected from ROS")
-
+  
       document.getElementById("status").textContent = "Disconnected";
       document.getElementById("status").classList.remove("text-green-600");
       document.getElementById("status").classList.add("text-red-600");
@@ -72,6 +82,7 @@ const App = () => {
       ros.close();
     };
   }, []);
+
 
   const sendJoyMessage = (axes, buttons) => {
     if (publisher) {
@@ -119,7 +130,6 @@ const App = () => {
     sendJoyMessage([0, 0, 0, 0], Array(15).fill(0));
   };
 
-  
 
   useEffect(() => {
     const pressedKeys = new Set();
@@ -171,11 +181,37 @@ const App = () => {
     sendJoyMessage([0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
   };
 
+  const computePath = () => {
+    // Regex to match [digit][any character][digit]
+    const regex = /^\d\D\d$/;
+
+    // Validate start and destination points
+    if (!regex.test(startPoint) || !regex.test(destinationPoint)) {
+      alert("Both start and destination points should be in the format [digit][any character][digit] (e.g., 1a1).");
+      return;
+    }
+
+    let req = new roslib.ServiceRequest({
+      start_point: {x: startPoint[0], y: startPoint[2]},
+      destination_point: { x: destinationPoint[0], y: destinationPoint[2] }
+    });
+
+    computePathSrv.callService(req, (res) => {
+      if (res.success) {
+        console.log("Path computed successfully!");
+        // Optionally, update UI with path information or status
+      }
+      else {
+        console.log("Failed to compute path");
+      }
+    })
+  }
+
   return (
     <div className="flex flex-col items-center p-6 bg-gray-100 min-h-screen">
       <p class="text-lg mb-4">Status: <span id="status" class="font-semibold text-red-600">Disconnected</span></p>
       <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 mb-8 w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold mb-4">🐤 Duckiebot Path Finder</h1>
+        <h1 className="text-2xl font-bold mb-4">📍 Duckiebot Path Finder</h1>
         <div className="flex flex-col gap-2 mt-4">
           <input
             type="text"
@@ -191,14 +227,14 @@ const App = () => {
             onChange={(e) => setDestinationPoint(e.target.value)}
             className="w-full px-4 py-2 border rounded mb-4"
           />
-          <button id="computePath" onClick={startCourse} disabled={emergencyActive || !startPoint || !destinationPoint} className={`px-12 py-2 rounded w-full bg-yellow-400 ${emergencyActive || !startPoint || !destinationPoint ? "opacity-50 cursor-not-allowed" : "hover:bg-yellow-500 text-white"}`} >
+          <button id="computePath" onClick={computePath} disabled={emergencyActive || !startPoint || !destinationPoint} className={`px-12 py-2 rounded w-full bg-yellow-400 ${emergencyActive || !startPoint || !destinationPoint ? "opacity-50 cursor-not-allowed" : "hover:bg-yellow-500 text-white"}`} >
             Continue
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 mb-2 w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold mb-4">🚗 Duckiebot Joystick</h1>
+      <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 mb-8 w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-4">🎮 Duckiebot Joystick</h1>
         <Joystick className="flex flex-col gap-2 mt-4" size={150} baseColor="#ddd" stickColor="#999" move={handleMove} stop={handleStop} />
 
         <div className="flex flex-col gap-2 mt-4">
@@ -211,6 +247,12 @@ const App = () => {
         </div>
       </div>
 
+      <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 mb-2 w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-4">🚗 Course Information</h1>
+        <div className="flex flex-col gap-2 mt-4">
+        
+        </div>
+    </div>
     </div>
   );
 };
