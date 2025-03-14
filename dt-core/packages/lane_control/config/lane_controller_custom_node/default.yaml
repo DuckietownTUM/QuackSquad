@@ -51,11 +51,11 @@ verbose: 0            # Debugging verbosity level (0 = minimal output, 2 = maxim
 # LEFT TURN
 l_turn_v: 0.25
 l_turn_omega: 1.5       # (must be > 0)
-l_turn_secs: 2.7
+l_turn_secs: 0.6
 
 # RIGHT TURN
 r_turn_v: 0.25
-r_turn_omega: -4   # (must be < 0)
+r_turn_omega: -3.5   # (must be < 0)
 r_turn_secs: 1
 
 # STRAIGHT MOVEMENT (not use by default)

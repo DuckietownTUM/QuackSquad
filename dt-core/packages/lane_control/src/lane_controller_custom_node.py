@@ -110,7 +110,6 @@ class LaneControllerNode(DTROS):
         self.dist_when_stopped = 0
         self.turn_dist = None
         self.is_turning = False
-
         self.drive_running = False
 
         self.led_signals = [
@@ -275,7 +274,7 @@ class LaneControllerNode(DTROS):
         self.at_stop_line = False
         self.log("At stop line")
 
-        turn_type = 0
+        turn_type = 2
         self.log(f"Selecting turn: {turn_type}")
         self.change_leds(self.led_signals[turn_type])
 
@@ -287,37 +286,33 @@ class LaneControllerNode(DTROS):
             return
 
         # Construct turning command
-        # v, omega, turn_dist = self.turn_params[turn_type]
-        # self.turn_dist = 0.5
+        v, omega, turn_dist = self.turn_params[turn_type]
+        self.turn_dist = 0.2
 
-        # car_control_msg = Twist2DStamped()
-        # car_control_msg.header.stamp = rospy.Time.now()
-        # car_control_msg.v = v.value
-        # car_control_msg.omega = omega.value
+        car_control_msg = Twist2DStamped()
+        car_control_msg.header.stamp = rospy.Time.now()
+        car_control_msg.v = v.value
+        car_control_msg.omega = omega.value
 
         # # Turn
-        # self.publish_cmd(car_control_msg)
-
-        self.params["~omega_ff"].value = -1.5
-
+        self.publish_cmd(car_control_msg)
         self.log("Turning now")
         self.is_turning = True
 
     def turns(self):
         if self.dist_when_stopped is None:
             return
-        
+
         if self.total_dist - self.dist_when_stopped < self.turn_dist:
             return
-        
+
         # Construct the turn stopping command
-        # car_stop_msg = Twist2DStamped()
-        # car_stop_msg.v = 0
-        # car_stop_msg.omega = 0
+        car_stop_msg = Twist2DStamped()
+        car_stop_msg.v = 0
+        car_stop_msg.omega = 0
 
         # # Stop turn
-        # self.publish_cmd(car_stop_msg)
-        self.params["~omega_ff"].value = 0
+        self.publish_cmd(car_stop_msg)
         self.log("Stopping turn")
         self.is_turning = False
         self.dist_when_stopped = None
@@ -359,11 +354,10 @@ class LaneControllerNode(DTROS):
         if self.at_stop_line:
             self.at_intersection()
 
-        # elif self.is_turning:
-        #     self.turns()
+        elif self.is_turning:
+            self.turns()
 
         else:  # Lane following
-            self.turns()
             self.lane_following(pose_msg, dt)
 
         # Set the current time stamp, needed for lane following
