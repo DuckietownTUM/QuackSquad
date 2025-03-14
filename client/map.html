@@ -4,32 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Duckie Localizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
     <style>
         body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
             background-color: dodgerblue;
         }
-        .map {
+        .container {
+            position: relative;
+        }
+        #map {
             width: 500px;
         }
-        .bot {
+        #bot {
             width: 40px;
             height: 40px;
+            position: absolute;
+            transition: left 0.3s linear, top 0.3s linear;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <img src="map.png" alt="Duckietown City" class="map">
-        <img src="duckie.png" alt="Duckiebot" class="bot" id="bot">
+        <img src="map.png" alt="Duckietown City" id="map">
+        <img src="duckie.png" alt="Duckiebot" id="bot">
     </div>
 
     <script>
-        let coordinates = (3, 0)
+        let TILES_X = 6
+        let TILES_Y = 7
+        let TILE_SIZE_M = 0.61
 
+        const map = document.getElementById("map");
         const bot = document.getElementById("bot");
-        bot.style.left = posX + "px";
-        bot.style.top = posY + "px";
+        let tile_size_px = map.width / TILES_X
+        let half_bot_width = bot.width / 2
+
+        var ros = new ROSLIB.Ros({
+            url: "ws://duckie.local:9090"
+        });
+
+        ros.on("connection", function() {
+            console.log("Connected to ROSBridge WebSocket!");
+        });
+
+        ros.on("error", function(error) {
+            console.error("Error connecting to ROS:", error);
+        });
+
+        ros.on("close", function() {
+            console.log("Disconnected from ROSBridge.");
+        });
+
+        var odomListener = new ROSLIB.Topic({
+            ros: ros,
+            name: "/duckie/deadreckoning_node/odom",
+            messageType: "nav_msgs/Odometry"
+        });
+
+        odomListener.subscribe(function(message) {
+            updatePosition(message.pose.pose.position.x, -message.pose.pose.position.y);
+        });
+
+        function updatePosition(x, y) {
+            let posX = (x / TILE_SIZE_M * tile_size_px) - half_bot_width;
+            let posY = (y / TILE_SIZE_M * tile_size_px) - half_bot_width;
+            bot.style.left = posX + "px";
+            bot.style.top = posY + "px";
+        }
+
+        // bot.style.transform = "scaleX(-1)";
+        // bot.style.transform = "rotate(0deg)";
+
+        updatePosition(2.135, 0.305)
     </script>
 
 </body>
