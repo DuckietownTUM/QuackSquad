@@ -77,7 +77,6 @@ class DeadReckoningNode(DTROS):
 
         # Setup subscribers
         self.sub_encoder_left = message_filters.Subscriber("~left_wheel", WheelEncoderStamped)
-
         self.sub_encoder_right = message_filters.Subscriber("~right_wheel", WheelEncoderStamped)
 
         # Setup the time synchronizer
@@ -88,6 +87,7 @@ class DeadReckoningNode(DTROS):
 
         # Setup publishers
         self.pub = rospy.Publisher("~odom", Odometry, queue_size=10)
+        self.pub_coordinates = rospy.Publisher("~coordinates", Point, queue_size=10)
 
         # Setup timer
         self.timer = rospy.Timer(rospy.Duration(1 / self.publish_hz), self.cb_timer)
@@ -214,6 +214,14 @@ class DeadReckoningNode(DTROS):
                 ),
             )
         )
+
+        TILE_SIZE = 61
+        coordinates_msg = Point(
+            int(self.x/TILE_SIZE),
+            int(self.y/TILE_SIZE),
+            0
+        )
+        self.pub_coordinates.publish(coordinates_msg)
 
     @staticmethod
     def angle_clamp(theta):
