@@ -171,9 +171,9 @@ class LaneControllerNode(DTROS):
         """
 
         # Only stop at stop lines at minimum s second intervals
-        if msg.at_stop_line and self.prev_at_stop_line_time is not None:
-           if msg.header.stamp.to_sec() - self.prev_at_stop_line_time.to_sec() < 2:
-                   return
+        #if msg.at_stop_line and self.prev_at_stop_line_time is not None:
+        #   if msg.header.stamp.to_sec() - self.prev_at_stop_line_time.to_sec() < 2:
+        #           return
 
         self.at_stop_line = msg.at_stop_line
         self.prev_at_stop_line_time = msg.header.stamp
@@ -278,9 +278,6 @@ class LaneControllerNode(DTROS):
         self.log(f"Sleeping for {self.stop_time.value} seconds")
         rospy.sleep(self.stop_time.value)
 
-        if self.turn_type == 1:
-            return
-
         # Construct turning command
         v, omega, turn_dist = self.turn_params[self.turn_type]
         self.turn_dist = turn_dist
@@ -290,8 +287,18 @@ class LaneControllerNode(DTROS):
         car_control_msg.v = v.value
         car_control_msg.omega = omega.value
 
-        # # Turn
+        # Turn
         self.publish_cmd(car_control_msg)
+
+        if self.turn_type == 1:
+            rospy.sleep(1)
+            done_msg = BoolStamped()
+            done_msg.header = Header()
+            done_msg.data = True
+            self.pub_intersection_done.publish(done_msg)
+            self.dist_when_stopped = None
+            return
+
         self.log("Turning now")
         self.is_turning = True
 
@@ -299,7 +306,7 @@ class LaneControllerNode(DTROS):
         if self.dist_when_stopped is None:
             return
 
-        if self.total_dist - self.dist_when_stopped < self.turn_dist:
+        if self.total_dist - self.dist_when_stopped < self.turn_dist.value:
             return
 
         # Construct the turn stopping command
