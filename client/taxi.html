@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Duckiebot Controller</title>
+	<script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+	<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-900 flex flex-col items-center justify-center min-h-screen">
+
+	<h1 class="text-3xl font-bold mb-4">🚗 Duckiebot Controller</h1>
+
+	<div class="bg-white shadow-lg rounded-lg p-6 w-full max-w-md text-center">
+		<p class="text-lg mb-2">Status: <span id="status" class="font-semibold text-red-600">Disconnected</span></p>
+
+		<button onclick="connectROS()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
+			Connect to Duckiebot
+		</button>
+
+		<div class="mt-4">
+			<button id="startBtn" onclick="startCourse()"
+				class="bg-green-500 text-white px-4 py-2 rounded w-full hover:bg-green-700">
+				▶ Start / Resume
+			</button>
+			<button id="eStopBtn" onclick="emergencyStop()"
+				class="bg-red-500 text-white px-4 py-2 rounded w-full mt-2 hover:bg-red-700">
+				⛔ Emergency Stop
+			</button>
+		</div>
+	</div>
+
+	<script>
+		let ros
+		let eStopTopic, idleModeTopic;
+		let emergencyActive = false;
+		let isIdle = true
+
+		function connectROS() {
+			ros = new ROSLIB.Ros({
+				url: "ws:duckie.local:9090"
+			});
+
+			ros.on("connection", function () {
+				document.getElementById("status").textContent = "Connected";
+				document.getElementById("status").classList.remove("text-red-600");
+				document.getElementById("status").classList.add("text-green-600");
+
+				eStopTopic = new ROSLIB.Topic({
+					ros: ros,
+					name: "/duckie/wheels_driver_node/emergency_stop",
+					messageType: "duckietown_msgs/BoolStamped"
+				});
+
+				idleModeTopic = new ROSLIB.Topic({
+					ros: ros,
+					name: "/duckie/joy_mapper_node/idle_mode",
+					messageType: "duckietown_msgs/BoolStamped"
+				});
+
+				eStopTopic.subscribe(cbEStop);
+				idleModeTopic.subscribe(cbIdleMode);
+			});
+
+			ros.on("error", function () {
+				document.getElementById("status").textContent = "Error Connecting";
+				document.getElementById("status").classList.remove("text-green-600");
+				document.getElementById("status").classList.add("text-red-600");
+			});
+
+			ros.on("close", function () {
+				document.getElementById("status").textContent = "Disconnected";
+				document.getElementById("status").classList.remove("text-green-600");
+				document.getElementById("status").classList.add("text-red-600");
+			});
+		}
+
+		function startCourse() {
+			isIdle = false
+			let msg = new ROSLIB.Message({ data: false });
+			idleModeTopic.publish(msg);
+		}
+
+		function emergencyStop() {
+		    emergencyActive = !emergencyActive 
+			let msg = new ROSLIB.Message({ data: emergencyActive });
+			eStopTopic.publish(msg);
+		}
+
+		function cbEStop(eStopMsg) {
+			emergencyActive = eStopMsg.data;
+			const startBtn = document.getElementById("startBtn");
+
+			if (emergencyActive) {
+				startBtn.disabled = true;
+				startBtn.classList.add("opacity-50", "cursor-not-allowed");
+				
+				isIdle = true
+				startBtn.style.display = "block";
+			} else {
+				startBtn.disabled = false;
+				startBtn.classList.remove("opacity-50", "cursor-not-allowed");
+			}
+		}
+
+		function cbIdleMode(idleModeMsg) {
+			const startBtn = document.getElementById("startBtn");
+
+			if (!idleModeMsg.data) {
+				startBtn.style.display = "none";
+			} else {
+				startBtn.style.display = "block";
+			}
+		}
+	</script>
+</body>
+
+</html>

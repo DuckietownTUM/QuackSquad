@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Path Finder</title>
+	<script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			margin: 0;
+		}
+
+		.container {
+			text-align: center;
+			padding: 20px;
+			border: 1px solid #ccc;
+			border-radius: 8px;
+		}
+
+		input {
+			margin: 10px;
+			padding: 8px;
+			font-size: 14px;
+		}
+
+		button {
+			padding: 10px 15px;
+			font-size: 16px;
+			cursor: pointer;
+			margin-top: 20px;
+		}
+
+		button:disabled {
+			cursor: not-allowed;
+			background-color: #ccc;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<h2>Path Finder</h2>
+		<input type="text" id="start" placeholder="Enter start location" />
+		<input type="text" id="destination" placeholder="Enter destination" />
+		<br />
+		<button id="continueBtn" disabled>Continue</button>
+	</div>
+
+	<script>
+		// Initialize connection to ROS
+		const ros = new ROSLIB.Ros({
+			url: 'ws://duckie.local:9090'  // Update with the correct ROS WebSocket URL
+		});
+
+		// Get DOM elements
+		const startInput = document.getElementById('start');
+		const destinationInput = document.getElementById('destination');
+		const continueBtn = document.getElementById('continueBtn');
+
+		// Enable the continue button only when both fields are filled
+		function checkButtonState() {
+			if (startInput.value && destinationInput.value) {
+				continueBtn.disabled = false;
+			} else {
+				continueBtn.disabled = true;
+			}
+		}
+
+		// Check button state when inputs change
+		startInput.addEventListener('input', checkButtonState);
+		destinationInput.addEventListener('input', checkButtonState);
+
+		// Call the ROS service when continue button is clicked
+		continueBtn.addEventListener('click', () => {
+			let start = `start_point: {x:${startInput.value[0]}, y:${startInput.value[2]}}`
+			let destination = `dest_point: {x:${destinationInput.value[0]}, y:${destinationInput.value[2]}}`
+			console.log(start)
+
+			// ROS service call
+			const service = new ROSLIB.Service({
+				ros: ros,
+				name: '/duckie/dijkstra_turns_node/compute_path',
+				serviceType: 'dijkstra/DijkstraSrv'  // Replace with actual service type
+			});
+
+			// Create request message for service
+			const request = new ROSLIB.ServiceRequest({
+				start_point: start,
+				dest_point: destination
+			});
+
+			// Call the service
+			service.callService(request, (result) => {
+				console.log('Service response:', result);
+				// Handle the result (e.g., show the computed path, update UI, etc.)
+			});
+		});
+	</script>
+</body>
+
+</html>
