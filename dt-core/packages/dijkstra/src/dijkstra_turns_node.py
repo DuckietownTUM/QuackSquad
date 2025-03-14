@@ -69,11 +69,11 @@ class DijkstraTurnsNode:
         if self.is_following_path:
             res.type = "err"
             res.msg = "Duckiebot is already following a path"
-            res.path = [Point(node.coordinates[0], node.coordinates[1]) for node in self.path]
+            res.path = [Point(node.coordinates[0], node.coordinates[1], 0) for node in self.path]
         else:
             self.compute_path(req.start_point, req.dest_point)
             res.type = "success"
-            res.path = [Point(node.coordinates[0], node.coordinates[1]) for node in self.path]
+            res.path = [Point(node.coordinates[0], node.coordinates[1], 0) for node in self.path]
 
         return res
 
