@@ -18,10 +18,6 @@ generate_messages(
   duckietown_msgs #
 )
 
-catkin_package(
-  CATKIN_DEPENDS message_runtime
-)
-
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
