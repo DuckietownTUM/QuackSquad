@@ -114,7 +114,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES dijkstra
-#  CATKIN_DEPENDS duckietown_msgs rospy std_msgs
+   CATKIN_DEPENDS duckietown_msgs rospy std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
