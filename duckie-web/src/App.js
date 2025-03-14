@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import roslib from "roslib";
 import { Joystick } from "react-joystick-component";
+import CourseInformation from "./components/CourseInformation";
 // import { Button } from "@/components/ui/button";
 
 const ROSBridgeURL = "ws://duckie.local:9090"; // Change this if needed
@@ -16,6 +17,7 @@ const App = () => {
   const [startPoint, setStartPoint] = useState("");
   const [destinationPoint, setDestinationPoint] = useState("");
   const [computePathSrv, setComputePathSrv] = useState(null)
+  const [dijkstraPath, setDijkstraPath] = useState(null)
 
   useEffect(() => {
     const ros = new roslib.Ros({ url: ROSBridgeURL });
@@ -200,7 +202,8 @@ const App = () => {
       console.log(res)
       if (res.success) {
         console.log("Path computed successfully!");
-        // Optionally, update UI with path information or status
+        setDijkstraPath(res.path)
+        console.log(dijkstraPath)
       }
       else {
         console.log("Failed to compute path");
@@ -247,13 +250,7 @@ const App = () => {
           </button>
         </div>
       </div>
-
-      <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 mb-2 w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold mb-4">🚗 Course Information</h1>
-        <div className="flex flex-col gap-2 mt-4">
-        
-        </div>
-    </div>
+      <CourseInformation/>
     </div>
   );
 };
