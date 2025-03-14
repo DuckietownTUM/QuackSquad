@@ -99,7 +99,7 @@ class DeadReckoningNode(DTROS):
         self.loginfo("Initialized")
 
         # Dijkstra
-        self.tile_size = rospy.get_param("~veh")
+        self.tile_size = rospy.get_param("~tile_size")
         self.x = self.tile_size * 3
         self.y = self.tile_size * 0
 
