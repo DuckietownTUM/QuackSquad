@@ -15,6 +15,7 @@ add_service_files(
 
 generate_messages(
   DEPENDENCIES
+  duckietown_msgs
 )
 
 catkin_package(
