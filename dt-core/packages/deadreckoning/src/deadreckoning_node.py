@@ -6,7 +6,6 @@ import rospy
 import message_filters
 
 from nav_msgs.msg import Odometry
-from std_msgs.msg import Float32
 from geometry_msgs.msg import Quaternion, Twist, Pose, Point, Vector3, TransformStamped, Transform
 
 from duckietown.dtros import DTROS, NodeType
@@ -78,7 +77,6 @@ class DeadReckoningNode(DTROS):
 
         # Setup subscribers
         self.sub_encoder_left = message_filters.Subscriber("~left_wheel", WheelEncoderStamped)
-
         self.sub_encoder_right = message_filters.Subscriber("~right_wheel", WheelEncoderStamped)
 
         # Setup the time synchronizer
@@ -89,7 +87,7 @@ class DeadReckoningNode(DTROS):
 
         # Setup publishers
         self.pub = rospy.Publisher("~odom", Odometry, queue_size=10)
-        self.pub_total_dist = rospy.Publisher("~total_dist", Float32, queue_size=10)
+        self.pub_coordinates = rospy.Publisher("~coordinates", Point, queue_size=10)
 
         # Setup timer
         self.timer = rospy.Timer(rospy.Duration(1 / self.publish_hz), self.cb_timer)
@@ -119,7 +117,7 @@ class DeadReckoningNode(DTROS):
         dtl = left_encoder.header.stamp - self.left_encoder_last.header.stamp
         dtr = right_encoder.header.stamp - self.right_encoder_last.header.stamp
         if dtl.to_sec() < 0 or dtr.to_sec() < 0:
-            # self.loginfo("Ignoring stale encoder message")
+            self.loginfo("Ignoring stale encoder message")
             return
 
         left_dticks = left_encoder.data - self.left_encoder_last.data
@@ -130,7 +128,6 @@ class DeadReckoningNode(DTROS):
 
         # Displacement in body-relative x-direction
         distance = (left_distance + right_distance) / 2
-        self.total_dist += abs(distance)
 
         # Change in heading
         dyaw = (right_distance - left_distance) / self.wheelbase
@@ -207,8 +204,6 @@ class DeadReckoningNode(DTROS):
         odom.twist.twist = Twist(Vector3(self.tv, 0.0, 0.0), Vector3(0.0, 0.0, self.rv))
 
         self.pub.publish(odom)
-        #print(self.total_dist)
-        self.pub_total_dist.publish(self.total_dist)
 
         self._tf_broadcaster.sendTransform(
             TransformStamped(
@@ -219,6 +214,14 @@ class DeadReckoningNode(DTROS):
                 ),
             )
         )
+
+        TILE_SIZE = 0.61
+        coordinates_msg = Point(
+            int(self.x/TILE_SIZE),
+            int(self.y/TILE_SIZE),
+            0
+        )
+        self.pub_coordinates.publish(coordinates_msg)
 
     @staticmethod
     def angle_clamp(theta):
