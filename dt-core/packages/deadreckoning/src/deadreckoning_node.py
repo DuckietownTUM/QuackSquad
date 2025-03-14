@@ -229,9 +229,9 @@ class DeadReckoningNode(DTROS):
 
     def srv_set_start_point(self, req):
         self.x = self.tile_size * req.point.x
-        self.y = self.tile_size * req.point.y
+        self.y = self.tile_size * -req.point.y
 
-        res = SetPointResponse(success=True, message=f"Start point set to ({req.point.x}, {req.point.y}")
+        res = SetPointResponse(success=True, message=f"Start point set to ({int(req.point.x)}, {int(req.point.y)})")
         return res
 
     @staticmethod
