@@ -38,7 +38,6 @@ const CourseInformation = ({ros, pos, path}) => {
 		nextTurnTopic.subscribe((msg) => setNextTurn(msg.data))
 		totalDistTopic.subscribe((msg) => setDist(msg.data))
 		speedTopic.subscribe((msg) => {
-			console.log(msg)
 			let ax = msg.linear_acceleration.x;
 			let ay = msg.linear_acceleration.y;
 			let currentTime = Date.now() / 1000.0; // Convert to seconds

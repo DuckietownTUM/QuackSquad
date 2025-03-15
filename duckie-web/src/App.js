@@ -57,7 +57,7 @@ const App = () => {
 	
 		ros.on("close", () => {
 			console.log("Disconnected from ROS")
-		
+			setRosError(null)
 			setState(null)
 		})
 
