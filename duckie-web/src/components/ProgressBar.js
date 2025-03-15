@@ -1,21 +1,20 @@
 import React from "react";
 
-const ProgressBar = ({value, max = 100, image}) => {
+const ProgressBar = ({ value, max = 100, image}) => {
 	const percentage = Math.min(100, (value / max) * 100);
 
 	return (
-		<div className="relative w-full">
+		<div className="">
 			{image && (
-				<img
-					src={image}
-					alt="Progress Icon"
-					className="absolute top-[-20px] left-[calc(100%*(${percentage}/100))] transform -translate-x-1/2"
-					style={{ width: "24px", height: "24px" }}
-				/>
+				<div className={`z-10 relative left-[calc(100%*(${percentage}/100))] transform -translate-x-1/2 w-7 h-7 bg-white rounded-full flex items-center justify-center`}
+					style={{ "--progress": percentage / 100 }}
+				>
+					<img src={image} alt="Duckietown Logo" className="w-6 h-6" />
+				</div>
 			)}
-			<div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden block">
+			<div className="z-1 relative top-[-22px] w-full bg-gray-200 rounded-full h-4">
 				<div
-					className={`h-full bg-yellow-400 transition-all duration-300`}
+					className={`h-full bg-yellow-400 rounded-full transition-all duration-300`}
 					style={{ width: `${percentage}%` }}
 				></div>
 			</div>
