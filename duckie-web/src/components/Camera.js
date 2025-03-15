@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import ROSLIB from "roslib"
 let topics = ["None", "Default [/duckie/camera_node/image/compressed]"]
 
@@ -6,17 +6,15 @@ const Camera = ({ros}) => {
 	const [selectedTopic, setSelectedTopic] = useState(topics[0] || "")
 	const [sub, setSub] = useState(null)
 
-	useEffect(() => {
-		if (!ros)
-			return
-	}, [ros])
-
 	function handleCallback(msg) {
 		let imgElement = document.getElementById("cameraFeed");
 		imgElement.src = "data:image/jpeg;base64," + msg.data;
 	}
 
 	function handleTopicSelection(topicName) {
+		if (!ros)
+			return
+
 		setSelectedTopic(topicName)
 
 		if (sub !== null)
@@ -38,7 +36,7 @@ const Camera = ({ros}) => {
 	}
 
 	return (
-		<div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 mb-2 w-full max-w-md text-center">
+		<div className="flex flex-col items-center min-w-lg bg-white shadow-lg rounded-lg p-8 pt-6 mb-2 w-full text-center">
 			<h1 className="text-2xl font-bold mb-4">📸 Camera Feed</h1>
 			<select
 				className="w-full p-2 border rounded mb-4"

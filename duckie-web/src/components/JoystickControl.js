@@ -93,9 +93,9 @@ const JoystickControl = ({ros, state, isEStopOn}) => {
 			<h1 className="text-2xl font-bold mb-1">🎮 Duckiebot Joystick</h1>
 			<div className="mb-4">
 				<p className="text-sm"> Use the Joystick or the Arrow keys</p>
-				<p className={`text-sm ${state === "IDLE_MODE" ? "block" : "hidden"}`}>Ctrl+Shift+/ : Toggle Joystick</p>
+				<p className={`text-sm ${["IDLE_MODE", "NORMAL_JOYSTICK_CONTROL"].includes(state) ? "block" : "hidden"}`}>Ctrl+Shift+/ : Toggle Joystick</p>
 			</div>
-			<Joystick className="flex flex-col gap-2 mt-4" size={150} baseColor="#ddd" stickColor="#999" move={handleMove} stop={handleStop} />
+			<Joystick className="flex flex-col gap-2 mt-4" size={150} baseColor="#ddd" stickColor="#999" move={handleMove} stop={handleStop} disabled={isEStopOn} />
 
 			<div className="flex flex-col gap-2 mt-4">
 				<button id="startBtn" onClick={startLineFollowing} disabled={isEStopOn}

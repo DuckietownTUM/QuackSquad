@@ -1,13 +1,96 @@
-import React from "react";
+import ROSLIB from "roslib";
+import React, { useEffect, useState } from "react";
 import ProgressBar from "./ProgressBar";
 import duckIcon from "../img/duckie.png"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowTurnDown, faArrowTurnUp, faArrowRightLong } from "@fortawesome/free-solid-svg-icons";
 
-const CourseInformation = () => {
+const CourseInformation = ({ros, pos, path}) => {
+	const [nextTurn, setNextTurn] = useState(0)
+	const [dist, setDist] = useState(0)
+	const [speed, setSpeed] = useState(0)
+	const [time, setTime] = useState(null)
+
+	let vx = 0, vy = 0
+
+	useEffect(() => {
+		if (!ros)
+			return
+
+		let nextTurnTopic = new ROSLIB.Topic({
+			ros: ros,
+			name: "/duckie/dijkstra_turns_node/turn_type",
+			messageType: "std_msgs/Int16"
+		})
+
+		let totalDistTopic = new ROSLIB.Topic({
+			ros: ros,
+			name: "/duckie/deadreckoning_node/total_dist",
+			messageType: "std_msgs/Float32"
+		})
+
+		let speedTopic = new ROSLIB.Topic({
+			ros: ros,
+			name: "/duckie/imu_node/data",
+			messageType: "sensor_msgs/Imu"
+		})
+
+		nextTurnTopic.subscribe((msg) => setNextTurn(msg.data))
+		totalDistTopic.subscribe((msg) => setDist(msg.data))
+		speedTopic.subscribe((msg) => {
+			console.log(msg)
+			let ax = msg.linear_acceleration.x;
+			let ay = msg.linear_acceleration.y;
+			let currentTime = Date.now() / 1000.0; // Convert to seconds
+
+			if (time !== null) {
+				const dt = currentTime - time;
+				if (dt > 0) {
+					vx += ax * dt;
+					vy += ay * dt;
+					setSpeed(Math.sqrt(vx * vx + vy * vy))
+				}
+			}
+			setTime(currentTime)
+		})
+
+	}, [ros])
+	
+	let getNextTurnArrow = () => {
+		let arrow
+		switch (nextTurn) {
+			case 0:
+				arrow = faArrowTurnUp
+				break;
+			case 1:
+				arrow = faArrowRightLong
+				break;
+			case 2:
+				arrow = faArrowTurnDown
+				break;
+			default:
+				break;
+		}
+		return arrow
+	}
+
 	return (
-		<div className="bg-white shadow-lg rounded-lg p-8 mb-2 w-full max-w-md text-center">
+		<div className="h-fit bg-white shadow-lg rounded-lg p-8 pt-6 mb-2 w-full max-w-md text-center">
 			<h1 className="text-2xl font-bold mb-4">🚗 Course Information</h1>
-			<div className="mt-4">
-				<ProgressBar value={42} image={duckIcon}/>
+			<div className="grid grid-rows-[1.5fr_1fr_1fr_1fr] grid-cols-[2fr_0.25fr_3fr] items-center mt-4">
+				<div className="col-span-3 mb-2">
+					<ProgressBar value={42} image={duckIcon}/>
+				</div>
+				{nextTurn !== -1 ? (
+					<div className="row-span-2 row-start-2 col-start-1 self-start">
+						<FontAwesomeIcon icon={getNextTurnArrow()} size="3x" rotation={270} flip="" />
+					</div>
+				): null}
+				<p className="col-start-1 row-start-4">{nextTurn === -1 ? "Available Turns": "Next Intersection"}</p>
+				<div className="row-span-3 row-start-2 col-start-2 border-l-2 border-gray-400 h-full"></div>
+				<p className="col-start-3 row-start-2 justify-self-start">Speed: <span>{speed.toFixed(2)}m/s</span></p>
+				<p className="col-start-3 row-start-3 justify-self-start">Distance traveled: <span>{dist.toFixed(2)}m</span></p>
+				<p className="col-start-3 row-start-4 justify-self-start">Tiles progression: <span>{null}</span></p>
 			</div>
 		</div>
 	)

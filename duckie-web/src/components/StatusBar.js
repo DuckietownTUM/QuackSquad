@@ -26,12 +26,11 @@ const StatusBar = ({ros, state, error}) => {
 	}
 
 	let rosStatus = () => {
-		if (error || ros === null || !ros.isConnected)
-			return false
+		return !(error || ros === null || !ros.isConnected)
 	}
 
 	return (
-		<div className="z-50 flex justify-center items-center p-4 bg-gray-200 shadow-lg rounded-lg fixed top-[0] w-full">	
+		<div className="z-50 flex justify-center items-center h-fit p-4 bg-gray-200 shadow-lg rounded-lg fixed top-[0] w-full">	
 			<p className="text-lg mx-4">Status: <span className={`font-semibold ${rosStatus() ? "text-green-600" : "text-red-600"}`}>{error ? "Ros Error" : (rosStatus() ? "Connected" : "Disconnected")}</span></p>
 			<p className="text-lg mx-4">State: <span className={`font-semibold ${getRobotStateColor()}`}>{state ? state : "--"}</span></p>
 		</div>

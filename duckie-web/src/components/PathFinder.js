@@ -46,7 +46,7 @@ const PathFinder = ({ros}) => {
 	}
 
 	return (
-		<div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 mb-2 w-full max-w-md text-center">
+		<div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 pt-6 mb-2 w-full max-w-md text-center">
 			<h1 className="text-2xl font-bold mb-4">📍 Duckiebot Path Finder</h1>
 			<div className="flex flex-col gap-2 mt-4">
 				<input
