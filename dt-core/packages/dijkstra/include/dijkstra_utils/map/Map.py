@@ -1,6 +1,6 @@
 from typing import List
-from Tile import Tile
-from TileType import TileType
+from .Tile import Tile
+from .TileType import TileType
 
 
 class Map:

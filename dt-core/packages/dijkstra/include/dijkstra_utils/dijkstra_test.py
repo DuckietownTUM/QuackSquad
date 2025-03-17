@@ -1,6 +1,6 @@
 from components.Graph import Graph
 from components.Route import Route
-from Map import DUCKIETOWN_CITY
+from map.Map import DUCKIETOWN_CITY
 from Dijkstra import Dijkstra
 
 
@@ -25,7 +25,7 @@ def get_direction(current_node, intersection_node, next_node):
 graph = Graph()
 graph.generate_from_map(DUCKIETOWN_CITY)
 
-start_coordinates = (2, 0)
+start_coordinates = (3, 0)
 to_coordinates = (3, 5)
 start = next((node for node in graph.nodes if node.coordinates == start_coordinates))
 to = next((node for node in graph.nodes if node.coordinates == to_coordinates))

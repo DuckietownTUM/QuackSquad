@@ -18,10 +18,9 @@
 		<arg name="anti_instagram" value="true" />
 
 		<!-- Deadreckoning (aka. Odometry)	-->
-<!--		<arg name="/localization" value="true"/>
+		<arg name="/localization" value="true"/>
 		<arg name="/localization/deadreckoning" value="true"/>
-LP removing for now
--->
+
 	    <!-- Lane Following stack -->
 	    <arg name="lane_following" value="true"/>
 	    <arg name="/lane_following/line_detection" value="true"/>
@@ -29,9 +28,13 @@ LP removing for now
 	    <arg name="/lane_following/ground_projection" value="true"/>
 	    <arg name="/lane_following/lane_filter" value="true"/>
 	    <arg name="/lane_following/lane_controller" value="true"/>
-            <arg name="/lane_following/stop_line_filter" value="false"/>
 	    <arg name="LED" value="true"/>
 	    <arg name="/LED/emitter" value="true"/>
+
+	    <!-- Vehicle Detection -->
+	    <arg name="vehicle_avoidance" value="true"/>
+	    <arg name="/vehicle_avoidance/detection" value="true"/>
+	    <arg name="/vehicle_avoidance/filter" value="true"/>
 
   	</include>
 
