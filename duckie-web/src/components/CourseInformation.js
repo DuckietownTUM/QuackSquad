@@ -30,8 +30,8 @@ const CourseInformation = ({ros, pos, path}) => {
 
 		let speedTopic = new ROSLIB.Topic({
 			ros: ros,
-			name: "/duckie/imu_node/data",
-			messageType: "sensor_msgs/Imu"
+			name: "/duckie/deadreckoning_node/speed",
+			messageType: "std_msgs/Float32"
 		})
 
 		let tileProgressTopic = new ROSLIB.Topic({
@@ -42,7 +42,7 @@ const CourseInformation = ({ros, pos, path}) => {
 
 		nextTurnTopic.subscribe((msg) => setNextTurn(msg.data))
 		totalDistTopic.subscribe((msg) => setDist(msg.data))
-		// speedTopic.subscribe((msg) => {setSpeed(msg.data)})
+		speedTopic.subscribe((msg) => {setSpeed(msg.data)})
 		tileProgressTopic.subscribe((msg) => {
 			setCurrentTile(msg.current_tile)
 			setMaxTile(msg.total_tile)
