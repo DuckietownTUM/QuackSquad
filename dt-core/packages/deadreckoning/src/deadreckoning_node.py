@@ -91,6 +91,7 @@ class DeadReckoningNode(DTROS):
         self.pub = rospy.Publisher("~odom", Odometry, queue_size=10)
         self.pub_coordinates = rospy.Publisher("~coordinates", Point, queue_size=10)
         self.pub_total_dist = rospy.Publisher("~total_dist", Float32, queue_size=10)
+        self.pub_speed = rospy.Publisher("~speed", Float32, queue_size=1)
 
         # Setup timer
         self.timer = rospy.Timer(rospy.Duration(1 / self.publish_hz), self.cb_timer)
@@ -214,6 +215,7 @@ class DeadReckoningNode(DTROS):
         self.pub.publish(odom)
         #print(self.total_dist)
         self.pub_total_dist.publish(self.total_dist)
+        self.pub_speed.publish(self.tv)
 
         self._tf_broadcaster.sendTransform(
             TransformStamped(

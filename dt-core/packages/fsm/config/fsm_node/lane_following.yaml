@@ -70,6 +70,6 @@ states:
       idle_mode_on: "IDLE_MODE"
     active_nodes:
       - ground_projection_node
-    lights: "ORANGE"
+    lights: "HAZARD_WARNING_LIGHTS"
 
 

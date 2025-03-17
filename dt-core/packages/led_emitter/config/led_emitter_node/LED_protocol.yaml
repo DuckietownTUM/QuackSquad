@@ -53,7 +53,7 @@ LED_protocol:
     HAZARD_WARNING_LIGHTS:
       color_mak: []
       color_list: "orange"
-      frequency_mask: [1,1,1,1,1]
+      frequency_mask: [1,1,0,1,1]
       frequency: *f1
 
     CAR_SIGNAL_RIGHT:
