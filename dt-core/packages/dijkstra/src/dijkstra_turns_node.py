@@ -6,6 +6,7 @@ import rospy
 from duckietown_msgs.msg import FSMState, BoolStamped
 from geometry_msgs.msg import Point
 from std_msgs.msg import Int16
+from dijkstra.msg import TileProgress
 
 from dijkstra_utils.components.Graph import Graph
 from dijkstra_utils.components.Route import Route
@@ -27,6 +28,7 @@ class DijkstraTurnsNode:
         # Setup publishers
         self.pub_turn_type = rospy.Publisher("~turn_type", Int16, queue_size=1, latch=True)
         self.pub_idle_mode = rospy.Publisher("/duckie/joy_mapper_node/idle_mode", BoolStamped, queue_size=1)
+        self.pub_tile_progress = rospy.Publisher("~tile_progress", TileProgress, queue_size=1)
 
         # Setup subscribers
         self.sub_topic_mode = rospy.Subscriber("~mode", FSMState, self.cbMode, queue_size=1)
@@ -45,7 +47,8 @@ class DijkstraTurnsNode:
         self.intersection_index = 0
         self.intersections = []
         self.path = []
-        self.coord = Point()
+        self.coord = None
+        self.current_tile = 0
 
         self.compute_path(Point(x=3,y=0,z=0), Point(x=3,y=5,z=0))
         rospy.sleep(2)
@@ -66,6 +69,7 @@ class DijkstraTurnsNode:
         self.path = dijkstra.get_shortest_path(route)
         self.intersections = [i for i, val in enumerate(self.path) if val.value.type.value in {"3W", "4W"}]
         self.intersection_index = 0
+        self.current_tile = 0
 
         self.is_following_path = True
         path_tiles = [tile.value.type.value for tile in self.path]
@@ -100,6 +104,10 @@ class DijkstraTurnsNode:
         return res.success
 
     def cb_update_coord(self, coord_msg):
+        if self.is_following_path and self.coord != coord_msg and coord_msg.x != 0 and coord_msg.y != 0:
+            self.current_tile += 1
+            self.pub_tile_progress.publish(TileProgress(current_tile=self.current_tile, total_tile=len(self.path)))
+
         self.coord = coord_msg
 
     def cbMode(self, mode_msg):
@@ -134,6 +142,7 @@ class DijkstraTurnsNode:
         if self.intersection_index >= len(self.intersections):
             self.is_following_path = False
             self.intersection_index = 0
+            self.current_tile = 0
             self.intersections = []
             self.path = []
 
@@ -149,11 +158,11 @@ class DijkstraTurnsNode:
         self.pub_turn_type.publish(self.turn_type)
 
     def check_at_dest(self):
-        if len(self.path) == 0:
+        if len(self.path) == 0 or self.coord is None:
             return
 
         dest_coord = self.path[-1].coordinates
-        print(f"{dest_coord}|{self.coord}")
+        #print(f"{dest_coord}|{self.coord}")
         return dest_coord[0] == self.coord.x and dest_coord[1] == self.coord.y
 
     def cbIntersectionDone(self, intersection_done_msg):
