@@ -34,24 +34,34 @@ Our project focuses on:
 Here's how we've organized our resources:
 ```
 duckietown/
-├── calibrations/          # Calibration files for camera and wheels
-├── code/                  # Custom source code
-│   ├── dijkstra/          # Implementation of Dijkstra's path-planning algorithm
-│   └── test_package/      # Testing utilities and experimental scripts
-├── dt-core/               # Core Duckietown software components
-│   ├── launchers/         # Launch files to start robot behaviors
-│   └── packages/          # Core modules managing robot behavior
-│       ├── fsm/                      # Finite State Machine logic for robot states
-│       ├── indefinite_navigation/    # Algorithms for continuous navigation
-│       └── lane_control/             # Lane-following control algorithms
-└── logs/                  # Log files generated during robot operations
+├── calibrations/                      # Calibration files for camera and wheels
+├── containers/                        # Docker-based containers for running Duckietown software
+│   ├── dt-car-interface/                # Container for managing car-related modules
+│   │   └── packages/                    # Software packages for car control and interaction
+│   │       ├── dagu_car/                   # Low-level control of the Duckiebot's motors
+│   │       └── joy_mapper/                 # Mapping joystick inputs to robot actions
+│   └── dt-core/                       # Core Duckietown software components
+│       ├── launchers/                   # Launch files to start robot behaviors
+│       └── packages/                    # Core modules managing robot behavior and perception
+│           ├── apriltag/                   # Detection and decoding of AprilTags
+│           ├── deadreckoning/              # Estimation of the robot's position using odometry
+│           ├── dijkstra/                   # Custom implementation of Dijkstra's path-planning algorithm
+│           ├── duckietown_demos/           # Launch files for core Duckietown functionalities
+│           ├── fsm/                        # Finite State Machine logic for managing robot states
+│           ├── lane_control/               # Lane-following and intersection navigation control algorithms
+│           ├── led_emitter/                # Control of the Duckiebot's LED signals
+│           ├── stop_line_filter/           # Detection of stop lines in the environment
+│           ├── test_package/               # Testing utilities and experimental code
+│           └── vehicle_detection/          # Algorithms for detecting other vehicles in the environment
+├── duckie-web/                        # Custom web-based interfaces for monitoring and controlling Duckiebots
+└── resources/                         # Additional assets such as images
 ```
 
 ---
 
-## 🚧 Work in progress!
+## 🚀 What’s Next?
 
-We’re actively developing this project—stay tuned for updates.
+This project has reached a solid and functional state. While no further updates are planned at the moment, improvements may come in the future if time and opportunity allow.
 
 ---
 
