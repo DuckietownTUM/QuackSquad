@@ -1,9 +1,0 @@
-<launch>
-    <arg name="veh" default="pontiac" doc="Name of vehicle. ex: megaman"/>
-    <arg name="pkg_name" value="dijkstra"/>
-    <arg name="node_name" value="dijkstra_turns_node"/>
-
-    <group ns="$(arg veh)">
-        <node name="$(arg node_name)" pkg="$(arg pkg_name)" type="$(arg node_name).py" output="screen" required="true"></node>
-    </group>
-</launch>

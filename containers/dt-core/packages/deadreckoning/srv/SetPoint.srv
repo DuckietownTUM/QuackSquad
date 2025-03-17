@@ -1,4 +1,0 @@
-geometry_msgs/Point point
----
-bool success
-string message
