@@ -20,8 +20,9 @@
 		<arg name="/camera/raw" value="true"/>
 		<arg name="/camera/rect" value="true"/>
 		<arg name="LED" value="true"/>
-		<arg name="/LED/detector" value="true"/>
+		<arg name="/LED/detector" value="false"/>  <!-- true -->
 		<arg name="/LED/pattern_switch" value="true"/>
+                <arg name="/LED/emitter" value="true" />  <!-- Added -->
 
         <!-- Lane Following stack -->
         <arg name="lane_following" value="true"/>
@@ -36,12 +37,12 @@
         <arg name="/vehicle_avoidance/detection" value="true" />
         <arg name="/vehicle_avoidance/filter" value="true" />
         <arg name="/vehicle_avoidance/control" value="true"/>
-                
+        
 		<!-- Intersection arguments -->
-		<arg name="unicorn_intersection" value="true"/>
+        <arg name="unicorn_intersection" value="true"/>
 		<arg name="apriltags" value="true" />
 		<arg name="apriltags_random" value="true" />
-		<arg name="intersectionType" value="trafficLight"/>
+        <arg name="intersectionType" value="stopSign"/>
 
 		<!-- Multi-bot behaviours -->
 		<arg name="coordination" value="true"/>

@@ -21,3 +21,6 @@ target_frame: "~/base_footprint"
 
 # Verbose output
 debug: False
+
+# Tile size in meters
+tile_size: 0.61

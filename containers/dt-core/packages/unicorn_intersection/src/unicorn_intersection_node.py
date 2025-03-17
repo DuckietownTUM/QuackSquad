@@ -3,6 +3,7 @@ import json
 
 import rospy
 from duckietown_msgs.msg import BoolStamped, FSMState, LanePose, TurnIDandType
+from duckietown_msgs.srv import ChangePattern
 from std_msgs.msg import String
 
 
@@ -15,9 +16,9 @@ class UnicornIntersectionNode:
 
         ## Internal variables
         self.state = "JOYSTICK_CONTROL"
-        self.active = False
-        self.turn_type = -1
-        self.tag_id = -1
+        self.active = True
+        self.turn_type = 0 #-1
+        self.tag_id = 9 #-1
         self.forward_pose = False
 
         ## Subscribers
@@ -36,9 +37,13 @@ class UnicornIntersectionNode:
             "~intersection_done_detailed", TurnIDandType, queue_size=1
         )
 
+        # Services
+        self.change_pattern_srv = rospy.ServiceProxy("led_emitter_node/set_pattern", ChangePattern)
+
         ## update Parameters timer
         self.params_update = rospy.Timer(rospy.Duration.from_sec(1.0), self.updateParams)
 
+        rospy.loginfo("Initialized.")
     def cbLanePose(self, msg):
         if self.forward_pose:
             self.pub_lane_pose.publish(msg)
@@ -51,6 +56,7 @@ class UnicornIntersectionNode:
 
     def cbIntersectionGo(self, msg):
         rospy.loginfo("[%s] Recieved intersection go message from coordinator", self.node_name)
+        print(self.active)
         if not self.active:
             return
 
@@ -66,18 +72,26 @@ class UnicornIntersectionNode:
             rospy.sleep(2)
 
         tag_id = self.tag_id
-        turn_type = self.turn_type
+        turn_type = 0 #self.turn_type
 
         sleeptimes = [self.time_left_turn, self.time_straight_turn, self.time_right_turn]
         LFparams = [self.LFparams_left, self.LFparams_straight, self.LFparams_right]
         omega_ffs = [self.ff_left, self.ff_straight, self.ff_right]
         omega_maxs = [self.omega_max_left, self.omega_max_straight, self.omega_max_right]
         omega_mins = [self.omega_min_left, self.omega_min_straight, self.omega_min_right]
+        led_patterns = ["CAR_SIGNAL_LEFT", "CAR_DRIVING", "CAR_SIGNAL_RIGHT"]
 
         self.changeLFParams(LFparams[turn_type], sleeptimes[turn_type] + 1.0)
         rospy.set_param("~lane_controller/omega_ff", omega_ffs[turn_type])
         rospy.set_param("~lane_controller/omega_max", omega_maxs[turn_type])
         rospy.set_param("~lane_controller/omega_min", omega_mins[turn_type])
+
+        # Change led pattern
+        try:
+            self.change_pattern_srv(String(data=led_patterns[turn_type]))
+        except rospy.ServiceException as e:
+            rospy.logwarn(f"could not set LEDs: {e}")
+
         # Waiting for LF to adapt to new params
         rospy.sleep(1)
 
@@ -90,6 +104,13 @@ class UnicornIntersectionNode:
         rospy.set_param("~lane_controller/omega_ff", 0)
         rospy.set_param("~lane_controller/omega_max", 999)
         rospy.set_param("~lane_controller/omega_min", -999)
+
+        # Change led pattern
+        try:
+            self.change_pattern_srv(String(data="CAR_DRIVING"))
+        except rospy.ServiceException as e:
+            rospy.logwarn(f"could not set LEDs: {e}")
+
 
         # Publish intersection done
         msg_done = BoolStamped()
@@ -109,7 +130,8 @@ class UnicornIntersectionNode:
         self.state = msg.state
 
     def cbSwitch(self, switch_msg):
-        self.active = switch_msg.data
+        #Try to solve the srv unavaible problem by making the node always active
+        self.active = True #switch_msg.data
 
     def cbTurnType(self, msg):
         self.tag_id = msg.tag_id

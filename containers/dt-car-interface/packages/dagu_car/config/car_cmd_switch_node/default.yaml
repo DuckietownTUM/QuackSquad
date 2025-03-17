@@ -46,3 +46,6 @@ mappings: #Mapping from FSMStates.state to cmd source names. Allows different FS
 
   IN_CHARGING_AREA: "vehicle"
   CHARGING_FIRST_IN_LINE: "stop"
+
+  RECOVERY_MODE: "joystick"
+  IDLE_MODE: "joystick"

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import copy
+import subprocess
 
 import rospy
 from duckietown_msgs.msg import BoolStamped, FSMState
@@ -14,6 +15,7 @@ class FSMNode:
 
         # Build transition dictionray
         self.states_dict = rospy.get_param("~states", {})
+        print(self.states_dict)
         # Validate state and global transitions
         if not self._validateStates(self.states_dict):
             rospy.signal_shutdown(f"[{self.node_name}] Incoherent definition.")
@@ -31,6 +33,9 @@ class FSMNode:
         self.state_msg.header.stamp = rospy.Time.now()
         # Setup publisher and publish initial state
         self.pub_state = rospy.Publisher("~mode", FSMState, queue_size=1, latch=True)
+
+        self.sub_e_stop = rospy.Subscriber("wheels_driver_node/emergency_stop", BoolStamped, self.estop_cb, queue_size=1)
+        self.e_stop = False
 
         # Provide service
         self.srv_state = rospy.Service("~set_state", SetFSMState, self.cbSrvSetState)
@@ -54,6 +59,7 @@ class FSMNode:
                 rospy.loginfo(f"FSM found service {service_name}")
             except rospy.ROSException as e:
                 rospy.logwarn(f"{e}")
+        print(self.srv_dict)
 
         # to change the LEDs
         self.changePattern = rospy.ServiceProxy("~set_pattern", ChangePattern)
@@ -81,6 +87,22 @@ class FSMNode:
         rospy.loginfo(f"[{self.node_name}] Initialized.")
         # Publish initial state
         self.publish()
+
+    def estop_cb(self, estop_msg):
+        """
+        Callback that process the received :obj:`BoolStamped` messages.
+
+        Args:
+            estop_msg (:obj:`BoolStamped`): the emergency_stop message to process.
+        """
+        self.e_stop = estop_msg.data
+
+        #if self.e_stop:
+        #    subprocess.run([
+        #        "rosservice", "call", "/duckie/led_emitter_node/set_pattern",
+        #        "{pattern_name: {data: HAZARD_WARNING_LIGHTS}}"
+        #    ])
+
 
     def _validateGlobalTransitions(self, global_transitions, valid_states):
         pass_flag = True
@@ -201,11 +223,12 @@ class FSMNode:
         self.active_nodes = copy.deepcopy(active_nodes)
 
     def updateLights(self):
-        lights = self._getLightsofState(self.state_msg.state)
+        lights = self._getLightsofState(self.state_msg.state) #if not self.e_stop else "HAZARD_WARNING_LIGHTS"
         if lights is not None:
             msg = String()
             msg.data = lights
             self.changePattern(msg)
+
 
     def cbEvent(self, msg, event_name):
         if msg.data == self.event_trigger_dict[event_name]:

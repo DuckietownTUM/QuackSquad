@@ -6,7 +6,9 @@ import rospy
 import message_filters
 
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Float32
 from geometry_msgs.msg import Quaternion, Twist, Pose, Point, Vector3, TransformStamped, Transform
+from deadreckoning.srv import SetPoint, SetPointResponse
 
 from duckietown.dtros import DTROS, NodeType
 from duckietown_msgs.msg import WheelEncoderStamped
@@ -73,11 +75,10 @@ class DeadReckoningNode(DTROS):
         self.yaw_trajectory = []
         self.time = []
 
-        self.total_dist = 0
+        self.total_dist = 0.0
 
         # Setup subscribers
         self.sub_encoder_left = message_filters.Subscriber("~left_wheel", WheelEncoderStamped)
-
         self.sub_encoder_right = message_filters.Subscriber("~right_wheel", WheelEncoderStamped)
 
         # Setup the time synchronizer
@@ -88,6 +89,9 @@ class DeadReckoningNode(DTROS):
 
         # Setup publishers
         self.pub = rospy.Publisher("~odom", Odometry, queue_size=10)
+        self.pub_coordinates = rospy.Publisher("~coordinates", Point, queue_size=10)
+        self.pub_total_dist = rospy.Publisher("~total_dist", Float32, queue_size=10)
+        self.pub_speed = rospy.Publisher("~speed", Float32, queue_size=1)
 
         # Setup timer
         self.timer = rospy.Timer(rospy.Duration(1 / self.publish_hz), self.cb_timer)
@@ -97,6 +101,10 @@ class DeadReckoningNode(DTROS):
         self._tf_broadcaster = TransformBroadcaster()
 
         self.loginfo("Initialized")
+
+        # Dijkstra
+        self.tile_size = rospy.get_param("~tile_size")
+        rospy.Service("~set_start_point", SetPoint, self.srv_set_start_point)
 
     def cb_ts_encoders(self, left_encoder, right_encoder):
         timestamp_now = rospy.get_time()
@@ -128,6 +136,7 @@ class DeadReckoningNode(DTROS):
 
         # Displacement in body-relative x-direction
         distance = (left_distance + right_distance) / 2
+        self.total_dist += abs(distance)
 
         # Change in heading
         dyaw = (right_distance - left_distance) / self.wheelbase
@@ -204,6 +213,9 @@ class DeadReckoningNode(DTROS):
         odom.twist.twist = Twist(Vector3(self.tv, 0.0, 0.0), Vector3(0.0, 0.0, self.rv))
 
         self.pub.publish(odom)
+        #print(self.total_dist)
+        self.pub_total_dist.publish(self.total_dist)
+        self.pub_speed.publish(self.tv)
 
         self._tf_broadcaster.sendTransform(
             TransformStamped(
@@ -214,6 +226,20 @@ class DeadReckoningNode(DTROS):
                 ),
             )
         )
+
+        coordinates_msg = Point(
+            int(self.x / self.tile_size),
+            int(-self.y / self.tile_size),
+            0
+        )
+        self.pub_coordinates.publish(coordinates_msg)
+
+    def srv_set_start_point(self, req):
+        self.x = self.tile_size * req.point.x
+        self.y = self.tile_size * -req.point.y
+
+        res = SetPointResponse(success=True, message=f"Start point set to ({int(req.point.x)},{int(req.point.y)})")
+        return res
 
     @staticmethod
     def angle_clamp(theta):
