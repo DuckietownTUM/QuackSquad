@@ -40,6 +40,7 @@ class StopLineFilterNode(DTROS):
         self.pub_at_stop_line = rospy.Publisher("~at_stop_line", BoolStamped, queue_size=1)
 
     def delay_stop(self):
+        print(f"{self.total_dist - self.prev_dist}|{self.trigger_dist}")
         if self.total_dist - self.prev_dist < self.trigger_dist - 0.1:
             return
 

@@ -47,6 +47,9 @@ class DijkstraTurnsNode:
         self.path = []
         self.coord = Point()
 
+        self.compute_path(Point(x=3,y=0,z=0), Point(x=3,y=5,z=0))
+        rospy.sleep(2)
+        self.update_pos(Point(x=3,y=0,z=0))
         rospy.loginfo(f"[{self.node_name}] Initialized.")
 
     def compute_path(self, start, dest):
@@ -125,13 +128,14 @@ class DijkstraTurnsNode:
                 else:
                     return 0
 
-        if self.intersection_index >= len(self.intersections) and self.check_at_dest():
+        if self.check_at_dest():
+            self.pub_idle_mode.publish(BoolStamped(data=True))
+
+        if self.intersection_index >= len(self.intersections):
             self.is_following_path = False
             self.intersection_index = 0
             self.intersections = []
             self.path = []
-
-            self.pub_idle_mode.publish(BoolStamped(data=True))
 
         if self.is_following_path:
             location = self.intersections[self.intersection_index]
@@ -149,6 +153,7 @@ class DijkstraTurnsNode:
             return
 
         dest_coord = self.path[-1].coordinates
+        print(f"{dest_coord}|{self.coord}")
         return dest_coord[0] == self.coord.x and dest_coord[1] == self.coord.y
 
     def cbIntersectionDone(self, intersection_done_msg):

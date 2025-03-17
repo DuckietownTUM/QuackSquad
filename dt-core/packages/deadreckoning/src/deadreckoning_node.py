@@ -75,7 +75,7 @@ class DeadReckoningNode(DTROS):
         self.yaw_trajectory = []
         self.time = []
 
-        self.total_dist = 0
+        self.total_dist = 0.0
 
         # Setup subscribers
         self.sub_encoder_left = message_filters.Subscriber("~left_wheel", WheelEncoderStamped)
